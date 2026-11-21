@@ -302,6 +302,24 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   7.7 times less than `/EnergyCost/Report` where MELCloud's energy
   correction is active, and no lifetime figure (com.melcloud's
   CLAUDE.md, the cures weighed and left).
+- Linked units on Home are an OPEN question, and the wire gives no
+  divisor (live-probed 2026-11-21, one account, read-only). On Classic
+  an indoor unit that is off still reports energy while another unit of
+  its outdoor unit runs (the owner's field experience), and the energy
+  report carries `UsageDisclaimerPercentages`, a comma-separated list
+  com.melcloud counts the entries of and divides by. Home has nothing
+  of the kind: `/context` carries no unit count, the energy answer is
+  `deviceId` and `measureData` (`type`, `values`) and no more, and the
+  only trace of a link is a unit's `capabilities.isMultiSplitSystem`.
+  `systemId` does not group siblings: it was `null` on the one
+  multi-split unit read (a first-generation adapter, `melCloudWiFi`)
+  and set on a unit that is not multi-split (`fourthGenWifi`). That
+  multi-split unit answered no hour bucket over a day and 0.9 kWh over
+  92 days, and its siblings are not in the account: whether Home
+  answers a unit's own energy or its outdoor unit's on each is NOT
+  measured. It takes an account holding two units of one outdoor unit;
+  until then the Home meters count what the wire answers per unit,
+  undivided.
 - The grain of a Home energy CHART follows the span asked for, never
   the time of day (62.0.2): hour buckets up to one day of window, day
   buckets beyond, as the Classic report does (its wire answers hours
@@ -541,23 +559,46 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   question is answered rather than re-opened: the fix does not cross,
   and the reason is the wire's shape.
 - `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: MELCloud
-  can refuse the zone-level read the flag promises (measured
-  2026-08-26 — a shared building's zone-level `GetSettings` answers
-  `401` on a valid session; that read went out under the prefixed
-  table name of 30.0.0 to 60.9.0, above, so whether the building being
-  shared caused it is no longer established, and the 2024 fallback it
-  was written for stays either way). The protection/holiday reads are
-  therefore zone-first with a device-level fallback on failure
-  whenever the flag is `true` or unknown — the original 2024 design; a
-  2026-03 refactor silently gated the fallback on the flag being
-  unknown and shipped five months of dead fallback under a comment
-  claiming otherwise. The fallback is deliberately ONE-WAY: a `false`
-  flag reads the device level only, because no device-level refusal
-  has ever been observed and a zone answer for a building the flag
+  can refuse the zone-level read the flag promises. Measured on
+  2026-08-26 (a shared building's zone-level `GetSettings` answers
+  `401` on a valid session) under the prefixed table name of 30.0.0 to
+  60.9.0, above, and again on 2026-11-21 under the restored one: of
+  five buildings of one account, both building-level reads of ONE
+  answer `401` while its unit answers at device level, and it is the
+  one the listing gives `AccessLevel: 1` and `DirectAccess: false`
+  (the four others, at 3 or 4 with direct access, answer `200`). The
+  protection/holiday reads are therefore zone-first with a device-level
+  fallback on failure whenever the flag is `true` or unknown — the
+  original 2024 design; a 2026-03 refactor silently gated the fallback
+  on the flag being unknown and shipped five months of dead fallback
+  under a comment claiming otherwise. The fallback is deliberately
+  ONE-WAY: a `false` flag reads the device level only, because no
+  device-level refusal has ever been observed (the fourteen units read
+  on 2026-11-21 included) and a zone answer for a building the flag
   excludes reads as "never configured" (`ok(null)`) — a wrong answer
-  masking a real failure (review catch, 2026-08-28). All three
-  clauses are kernel-pinned. Writes keep branching on the flag (the
-  wire's own addressing).
+  masking a real failure (review catch, 2026-08-28). All three clauses
+  are kernel-pinned. Writes keep branching on the flag (the wire's own
+  addressing).
+- Where the Classic frost and holiday settings live, live-probed
+  2026-11-21 (five buildings, fourteen units, read-only). The listing
+  carries a BUILDING's own `FP*`/`HM*` fields and nothing for a floor,
+  an area or a unit: a unit's settings cost one `GetSettings` each. A
+  building with no definition of its own answers `200` at building
+  level, `FPDefined: false` with the defaults (14 and 16), not a
+  failure. And the units of one building do not share their settings:
+  three units of one answered `HMDefined` true, true and false, and a
+  unit holds an enabled frost protection (12 to 14) under a building
+  that defines none. So the device-level read a building facade falls
+  back on is a SAMPLE — one unit's answer given as the building's, the
+  first in registry order — while its write goes to every unit. On the
+  five buildings measured the sample and a fold of every unit read the
+  same (single-unit buildings, or units that differ only in the
+  `Defined` flag of a feature that is off), which is why the read
+  stays as it is: the fold the Home building facade answers from
+  `/context` for free would cost a request per unit here, and change
+  the zone facades' return type, for a divergence nobody has seen. A
+  report of a zone panel showing settings its units do not all hold is
+  where that fold comes back.
 - Two registry-sync hooks, and swapping them re-opens a shipped bug in
   either direction (54.0.0). `syncRegistry()` is the BEST-EFFORT hook:
   it logs and swallows, and only the non-destructive callers have it —
