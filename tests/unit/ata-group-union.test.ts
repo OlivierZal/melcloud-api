@@ -110,6 +110,23 @@ describe(combineAtaGroups, () => {
     await expect(read).resolves.toStrictEqual(ok(HEATING))
   })
 
+  // A failed read answers a `Result`; one that throws has no result to
+  // rank among the others, and nothing to wait for.
+  it('rejects with a read that throws, whatever its place, without waiting for the others', async () => {
+    const thrown = new Error('No device found')
+    const gate: PromiseWithResolvers<Result<ClassicGroupState>> =
+      Promise.withResolvers()
+    const pending = groupDouble()
+    const throwing = groupDouble()
+    pending.getGroup.mockReturnValue(gate.promise)
+    throwing.getGroup.mockRejectedValue(thrown)
+    const read = combineAtaGroups([pending, throwing]).getGroup()
+
+    await expect(read).rejects.toBe(thrown)
+
+    gate.resolve(ok(HEATING))
+  })
+
   it('concatenates the member modes in group order, the filter passed to every group', () => {
     const first = groupDouble()
     const second = groupDouble()

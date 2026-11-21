@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.1.0] - 2026-11-21
+
+### Added
+
+- **`combineSettingsTargets(targets)` reads and writes several settings targets as one, so a host can join one house's buildings across the two MELCloud accounts for frost protection and holiday mode, as `combineAtaGroups` does for the ATA group.** It takes any `SettingsTarget` — the contract every Classic facade, both dialects' device facades and the Home building facade already answer (`getFrostProtection`, `getHolidayMode`, `updateFrostProtection`, `updateHolidayMode`), now a published type — and returns one that answers the same contract. The targets are read at once, and a read fails closed: the first failed `Result`, in target order, comes back unchanged, never a fold of the targets that did answer. A target whose read throws, where a failed read answers a `Result`, rejects the combined read at once, whatever its place; `combineAtaGroups` does the same, and now says so. Otherwise the states fold field by field, a field the targets disagree on reading `null`, the mixed marker, and a target never configured reading as off. A write sends the same update to every target at once, lets every write run to its end, rethrows a single failure as itself and bundles several into one `AggregateError` (`Frost protection update failed on targets`, `Holiday mode update failed on targets`), in target order. There is no rollback: a target that accepted the update keeps it when another refuses. Overheat protection stays outside the contract, MELCloud Home alone having it.
+
+### Changed
+
+- `aggregateProtectionStates` and `aggregateHolidayModeStates` take a fold among their members: a field a member already reads as mixed (`null`) stays mixed, where a member never configured still reads as off. A Home building's answer can therefore be folded with another target's. Their results for the states they took until now are the same.
+- **Internal**: the fail-closed read of several targets leaves `combineAtaGroups` for a module of its own (`src/facades/settle-reads.ts`), which `combineSettingsTargets` shares. Nothing in the package's surface changes.
+
 ## [62.0.3] - 2026-11-21
 
 ### Fixed
@@ -1087,7 +1098,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.3...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.0...HEAD
+[62.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.3...v62.1.0
 [62.0.3]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.2...v62.0.3
 [62.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.1...v62.0.2
 [62.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...v62.0.1
