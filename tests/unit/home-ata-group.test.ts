@@ -1,4 +1,4 @@
-import { mock } from '@olivierzal/api-core/testing'
+import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
@@ -210,7 +210,7 @@ describe('home device ata facade group', () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
-    const facade = new HomeDeviceAtaFacade(api, mock(model))
+    const facade = new HomeDeviceAtaFacade(api, defined(model))
 
     expect(okValue(await facade.getGroup())).toStrictEqual({
       FanSpeed: ClassicFanSpeed.slow,
@@ -226,7 +226,7 @@ describe('home device ata facade group', () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
-    const facade = new HomeDeviceAtaFacade(api, mock(model))
+    const facade = new HomeDeviceAtaFacade(api, defined(model))
 
     await facade.updateGroupState({ OperationMode: ClassicOperationMode.cool })
 
@@ -239,7 +239,7 @@ describe('home device ata facade group', () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
-    const facade = new HomeDeviceAtaFacade(api, mock(model))
+    const facade = new HomeDeviceAtaFacade(api, defined(model))
 
     await facade.updateGroupState({ Power: null })
 
@@ -250,7 +250,7 @@ describe('home device ata facade group', () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
-    const facade = new HomeDeviceAtaFacade(api, mock(model))
+    const facade = new HomeDeviceAtaFacade(api, defined(model))
     vi.mocked(api.updateValues).mockRejectedValueOnce(
       new NoChangesError('device-1'),
     )
@@ -264,7 +264,7 @@ describe('home device ata facade group', () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
-    const facade = new HomeDeviceAtaFacade(api, mock(model))
+    const facade = new HomeDeviceAtaFacade(api, defined(model))
     vi.mocked(api.updateValues).mockRejectedValue(new Error('BFF failure'))
 
     await expect(

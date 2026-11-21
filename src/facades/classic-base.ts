@@ -202,8 +202,10 @@ export abstract class ClassicBaseFacade<
     return this.api.registry
   }
 
-  // Zone-level settings are shared across devices, so any device id samples the
-  // zone's state.
+  // One device stands for the zone when its settings live at device
+  // level. A sample, not the zone's state: the units of one building
+  // can hold different settings (live-probed 2026-11-21, CLAUDE.md),
+  // though every building measured read the same either way.
   get #anyDeviceId(): ClassicDeviceID {
     const [id] = this.#deviceIds
     if (id === undefined) {
@@ -370,8 +372,9 @@ export abstract class ClassicBaseFacade<
    * Reads the frost-protection settings. They are asked at the
    * facade's own level first, then through one of its devices when
    * that read fails; a facade whose level is known to hold none reads
-   * through a device only. The level that answers is remembered, and
-   * is the one a write then addresses.
+   * through a device only. That device stands for the others, which
+   * may hold settings of their own. The level that answers is
+   * remembered, and is the one a write then addresses.
    * @returns The settings, `null` when never configured, or a typed
    * failure.
    * @throws An `Error` when the read has to go through a device and
