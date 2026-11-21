@@ -175,37 +175,112 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   silently ignores unknown fields (a garbage key is accepted). Only a
   `/context` readback showing the change proves a write path exists —
   never add a `HomeAtwValues` field on acceptance alone.
-- Home telemetry, live-probed 2026-07-17 (guest account — guests DO get
-  telemetry): `/telemetry/telemetry/actual/{id}` validates `measure`
-  (unknown → 400, so the vocabulary is enumerable; only `rssi` and
-  `power` — the on/off boolean history — exist), but
-  `/telemetry/telemetry/energy/{id}` does NOT: an unknown measure gets a
-  200 with empty `measureData`, indistinguishable from a real idle
-  window. Never conclude "no data" from an empty payload without
+- Home telemetry: `/telemetry/telemetry/actual/{id}` validates
+  `measure` (unknown → 400, so the vocabulary is enumerable; only
+  `rssi` and `power` — the on/off boolean history — exist; live-probed
+  2026-07-17 on a guest account — guests DO get telemetry).
+  `/telemetry/telemetry/energy/{id}` did not then and does now: probed
+  on an air-to-water unit on 2026-11-21, every measure name answers
+  `400` with an empty body — the two interval measures the SDK read
+  until 61.0.0 (`interval_energy_consumed`, `interval_energy_produced`),
+  a made-up one, none at all — except the air-to-air one,
+  `cumulative_energy_consumed_since_last_upload`, which answers `200`
+  with no point, indistinguishable from an idle window on a unit that
+  is not idle. Never conclude "no data" from an empty payload without
   re-checking the measure name against a known-good one.
-- Telemetry `interval` grammar is a case-insensitive .NET enum:
-  `Minute`, `Hour`, `Day`, `Week`, `Month`; anything else → 500,
-  missing → 400 (the `PT1H` ISO style never worked). Buckets are sparse
-  (only active periods return points) and near-live at `Minute` grain
-  (~1-2 min lag observed once — reconfirm under sustained activity).
-- Telemetry units differ per measure: ATW
-  `interval_energy_consumed/produced` are kWh per bucket; the ATA
-  `cumulative_energy_consumed_since_last_upload` is Wh, delivered as
-  100 Wh quantum pulses (a `100.0` point, then a `0.0` reset marker the
-  next minute). Hour/Day server aggregation sums those pulses correctly
-  on recent windows. The READ half of that dialect is library-owned
-  since 55.2.0: `getEnergySeries` on both Home device facades resolves
-  every value to ONE documented unit — kWh, the ATA watt-hours DIVIDED
-  by 1000 (division, not `* 0.001`: it is the exact arithmetic and the
-  one consumers ran themselves, so adoption is bit-identical) — and
-  anchors each stamp as a UTC epoch-ms instant; a garbled sample
-  degrades field-by-field to `null` (never `NaN`, never a throw) and
-  keeps its entry, and the query's `interval` speaks the typed
-  `HomeEnergyInterval` vocabulary. `getEnergy` stays wire-verbatim by
+- The energy telemetry was narrowed on 2026-11-20 around noon UTC
+  (com.melcloud's last read that passed on the owner's Homey is of
+  11:08, the first that failed of 12:08). What it serves an air-to-air
+  unit since, live-probed 2026-11-21: `interval` is `Hour` or `Day`,
+  and `Minute`, `Week` and `Month` answer `400` whatever the window,
+  the casing or the date format, where the grammar was a
+  case-insensitive .NET enum of the five (anything else → 500,
+  missing → 400; the `PT1H` ISO style never worked). Buckets are UTC
+  hours and UTC days, sparse (only active periods return points), and
+  the hour in progress is answered, moving in the counter's 100 Wh
+  steps.
+  `to` is NOT APPLIED: a response runs from `from` for a span of its
+  own, or to now. At `Hour` the span is 24 buckets: a one-hour and a
+  three-hour window, a day old, each came back with the 24 buckets
+  that follow their `from`, and a 30-hour window with those 24 and no
+  more. At `Day` it is 31 days: a 30-day window answered the 31st day
+  too (charted double before it was caught), a month came back whole,
+  and three months empty for a unit active on its last three days. A
+  `from` inside a bucket does not answer that bucket whole: at 03:30
+  and at 03:59 the 03:00 bucket was not answered at all, while a read
+  from 06:38 did carry a 06:00 one. `fetchAtaEnergy`
+  (`src/facades/home-energy.ts`) owns all of it: chunks of 24 hours or
+  30 days counted on the UTC clock from a bucket boundary, a bucket
+  answered twice kept once, and the hour buckets cut back to the
+  window they were asked for. It sends `to` on the next bucket
+  boundary all the same: the wire applied `to` before it was narrowed,
+  and should it again, a bound cut to the minute would leave out the
+  bucket that starts on it (found in review, by simulation).
+- An air-to-water unit's energy is `/report/v1/combined-energy`
+  (`getAtwEnergy`), the endpoint the MELCloud Home apps read
+  themselves (public record: andrew-blake/melcloudhome, ADR-027),
+  live-probed 2026-11-21. One report per request, with the datasets
+  `interval_energy_consumed` and `interval_energy_produced` in kWh
+  beside an `outside_temperature` one the SDK does not read. `period`
+  is `Daily` (hour buckets), `Weekly` or `Monthly` (day buckets);
+  `Hourly` and `Yearly` answer 500, and so does an air-to-air unit
+  (probed at `Daily`). Idle buckets are left out; the hour in progress is
+  there and grows (one bucket read 0.333 kWh at :51 and 0.467 once
+  closed). THE TRAP: past one period — a day at `Daily`, seven days at
+  `Weekly`, a calendar month at `Monthly`, counted from `from` — the
+  wire repeats the previous point at each period boundary. Under a
+  label the real bucket also carries it reads as a duplicate; where
+  the real bucket is idle it stands alone under that label, so nothing
+  can sift it out afterwards, and the report's own totals count it (a
+  two-day `Daily` total read 8.2 for 8.07 of real buckets). A request
+  therefore never spans more than one period and starts on a midnight
+  of the unit: one day at `Daily`, 28 days at `Monthly`, which no
+  month is shorter than — `fetchAtwEnergy`'s whole job. Checked
+  against the wire with the built SDK the same day: its 30- and 92-day
+  totals equal a single request's minus exactly the repeated points.
+  The oldest chunk, at the edge of the ~91-day retention, answered 500
+  twice before passing: the core's retry of a read is what carries it.
+  The requests are built from calendar DATES of the unit
+  (`toPeriodWindows`), each bound the start of a date: where a clock
+  change skips midnight (the Azores, Chile, Egypt, Lebanon, Cuba) the
+  day opens at 01:00, and spans counted from that instant opened every
+  later request at 01:00 too (found in review, by simulation). The day
+  the clocks go back was probed, 2026-10-25 on a unit of the EU: its
+  25 hours came back whole from one request, no point repeated, and
+  the two passes of the hour the clock reads twice carry ONE label —
+  `02:00` twice in the produced dataset, once in the consumed one, the
+  report's totals counting each. Which pass a lone label is cannot be
+  told, so `toAtwEnergySeries` reads every such label on its LATER
+  instant: read on the earlier one, a pass still in progress would
+  pass for an hour that has closed, and a consumer counting closed
+  hours would count it while it grows and never the rest.
+- A bucket is FINAL once it has closed, on both endpoints. Watched
+  around one close on 2026-11-21 (07:58Z to 08:15Z, ten reads): an
+  air-to-air bucket and an air-to-water one read the same from 45 s
+  before their close to 15 min after it, while the air-to-water hour
+  in progress went on growing. The public record has the same for an
+  air-to-water unit over a day-long soak (andrew-blake/melcloudhome,
+  ADR-027: every completed hour equal to its final value from the
+  first fetch after the close, 806 responses). One close and one
+  account here: com.melcloud's lifetime meters count a closed hour on
+  that footing, and a report showing a meter short of the MELCloud
+  app's own figures is where to look first.
+- Energy units and the series: the air-to-water datasets are kWh per
+  bucket; the ATA `cumulative_energy_consumed_since_last_upload` is
+  Wh, in 100 Wh quanta. The READ half of both dialects is
+  library-owned: `getEnergySeries` on both Home device facades answers
+  HOUR buckets — the finest grain the wire serves, and the one grain
+  the two endpoints agree on, an instant each — in ONE unit, kWh, the
+  ATA watt-hours DIVIDED by 1000 (division, not `* 0.001`: it is the
+  exact arithmetic and the one consumers ran themselves), each
+  bucket's start as an epoch-ms instant, per direction: `{ consumed }`
+  on an air-to-air unit, `{ consumed, produced }` on an air-to-water
+  one, which the wire answers together. A garbled sample degrades
+  field-by-field to `null` (never `NaN`, never a throw) and keeps its
+  entry. `HomeDeviceAtaFacade.getEnergy` stays wire-verbatim by
   decision — the escape hatch for consumers needing the raw
-  `measureData` envelope — and consumers must never re-decode the
-  dialect on top of it (timestamp format, interval grammar and
-  per-type units all live behind `getEnergySeries` now).
+  `measureData` envelope, one request, the caller's to chunk — and
+  consumers must never re-decode either dialect on top of the series.
 - The Classic listing's `CurrentEnergyConsumed` is two things under
   one name. On an air-to-water unit it is the instantaneous power in
   kW, with `CurrentEnergyProduced` (typed, and what com.melcloud's
@@ -223,20 +298,37 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `/context` settings (raw enumeration 2026-07-17: 11 ATA / 15 ATW
   names, none energy-bearing — no `CurrentEnergyConsumed/Produced`
   analog to Classic ATW's list fields), not as an `actual` measure.
-  Any Home power figure must be derived from energy buckets ÷ duration.
+  Any Home power figure must be derived from energy buckets ÷ duration,
+  and the finest bucket is an hour since 2026-11-20.
 - Historical telemetry windows mix semantics: May–June 2026 ATA daily
   values are counter samples (~10^5 Wh), not consumption — bound any
   backfill by plausibility or restrict it to recent windows. Observed
   retention ≥ 75/91 days (ATA/ATW), possibly just device onboarding
   age.
-- The Home wire speaks UTC wall-clock everywhere (live-probed
-  2026-07-18: the freshest report sample equals "now" in UTC): report
-  `x` samples, telemetry `time` values, and query windows alike.
-  `HomeAPIConfig.timezone` only anchors chart label rendering and
-  day/hour windows in the facades — never re-interpret wire values in
-  a local zone.
+- The Home wire speaks TWO clocks, by endpoint family (live-probed
+  2026-11-21). The telemetry endpoints (`/telemetry/telemetry/*`) are
+  UTC wall clock, stamps and bounds alike. The report endpoints
+  (`/report/v1/*`) are the UNIT's own wall clock: their stamps carry no
+  zone and mean the unit's `/context` `timeZone`, a zoneless bound is
+  read on that clock too, and a bound sent as an instant (`…Z`) is
+  converted, and echoed back local. This file said "UTC everywhere"
+  from 2026-07-18, on the observation that the freshest report sample
+  equals "now" in UTC — which tells nothing apart: the wire appends a
+  point at the `to` it understood, so the newest stamp equals `to` on
+  either reading. Asking one window twice does: with its bounds sent
+  as instants, a UTC+1 unit answers an hour more of samples, stamped
+  later than "now in UTC" (449 points against 398 on `trendsummary`,
+  the two other reports alike). `combined-energy` is read on the
+  unit's clock (62.0.0). The three temperature reports are NOT yet:
+  `#fetchReport` sends zoneless UTC bounds and `home-report.ts` reads
+  their stamps as UTC (`WIRE_TIME_ZONE`), so for a unit outside UTC
+  every Home temperature chart misses its newest hours and shows the
+  rest shifted by the unit's offset (#1859).
+  `HomeAPIConfig.timezone` anchors chart label rendering and day/hour
+  windows in the facades, and nothing on the wire.
 - Home report semantics (comfort-graph / internaltemperatures /
-  trendsummary): the BFF rounds the window down to full UTC days;
+  trendsummary): the BFF rounds the window down to full days of the
+  unit (the clocks entry above);
   datasets are irregular event-driven samples (each series has its own
   time grid — the facades resample with LOCF); `previousTriggers`
   carries the last pre-window sample per series (`value: null` with a
@@ -581,7 +673,8 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   instant, each dialect anchoring its own wall-clock discipline at its
   boundary — Classic timestamps are building-local wall clock anchored
   in the client's configured timezone (host zone when unset), Home
-  timestamps are UTC. The Classic instant is therefore exact only
+  telemetry stamps are UTC and the combined-energy labels the unit's
+  own clock. The Classic instant is therefore exact only
   insofar as the configured timezone IS the building's: a building in
   another zone skews it by the zone delta (worldwide skew reaches
   ±14 h), so day-scale reasoning stays safe where sub-hour does not.

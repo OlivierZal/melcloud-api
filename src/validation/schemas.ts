@@ -12,6 +12,7 @@ import type {
   HomeBuilding,
   HomeContext,
   HomeEnergyData,
+  HomeEnergyReportData,
   HomeErrorLogEntry,
   HomeReportData,
   HomeTokenResponse,
@@ -463,11 +464,20 @@ export const HomeEnergyDataSchema: z.ZodType<HomeEnergyData> = z.looseObject({
   measureData: z.array(HomeEnergyMeasureSchema),
 })
 
-const HomeReportPointSchema = z.looseObject({
-  /* eslint-disable id-length -- match the wire format produced by the BFF */
+/* eslint-disable id-length -- match the wire format produced by the BFF */
+const HomeReportPointSchema = z.looseObject({ x: z.string(), y: z.number() })
+
+// A `null` sample is admitted here and not above: these datasets carry
+// Chart.js's `spanGaps`, an option that only means something over one.
+const HomeEnergyReportPointSchema = z.looseObject({
   x: z.string(),
-  y: z.number(),
-  /* eslint-enable id-length -- end of the BFF point shape */
+  y: z.number().nullable(),
+})
+/* eslint-enable id-length -- end of the BFF point shapes */
+
+const HomeEnergyReportDatasetSchema = z.looseObject({
+  data: z.array(HomeEnergyReportPointSchema),
+  id: z.string(),
 })
 
 const HomeReportDatasetSchema = z.looseObject({
@@ -505,6 +515,14 @@ export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   reportPeriod: z.union([z.number(), z.string()]),
   to: z.string().optional(),
 })
+
+/**
+ * Home /report/v1/combined-energy report. Only the datasets are
+ * validated — what the SDK reads — and every dataset alike, the
+ * outdoor-temperature one included.
+ */
+export const HomeEnergyReportDataSchema: z.ZodType<HomeEnergyReportData> =
+  z.looseObject({ datasets: z.array(HomeEnergyReportDatasetSchema) })
 
 /**
  * Home /monitor/{ata,atw}unit/{id}/errorlog response (array of entries).

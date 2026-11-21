@@ -42,6 +42,7 @@ import {
   homeCognitoLoginPage,
   homeContextBuilding,
   homeContextData,
+  homeEnergyReport,
   homeReportPoint,
   homeTokenResponse,
   stageHomeOidcDance,
@@ -598,10 +599,9 @@ describe('melcloud home API', () => {
       mockRequest.mockRejectedValueOnce(
         httpNotFound('/telemetry/telemetry/energy/device-1'),
       )
-      const result = await api.getEnergy('device-1', {
+      const result = await api.getAtaEnergy('device-1', {
         from: '2026-08-01T00:00:00Z',
         interval: 'Day',
-        measure: 'consumed',
         to: '2026-08-02T00:00:00Z',
       })
 
@@ -1032,7 +1032,7 @@ describe('melcloud home API', () => {
       mockRequest.mockResolvedValueOnce(
         mockHttpResponse(mockEnergyData, {}, 200),
       )
-      const result = await api.getEnergy('device-1', {
+      const result = await api.getAtaEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Hour',
         to: '2026-03-02',
@@ -1056,13 +1056,33 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.getEnergy('device-1', {
+      const result = await api.getAtaEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Day',
         to: '2026-03-02',
       })
 
       expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
+    })
+
+    // The telemetry read names its type instead of routing on the
+    // registry, so an id the registry does not hold goes to the wire.
+    it('asks the wire for an id the registry does not hold', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockEnergyData, {}, 200),
+      )
+      const result = await api.getAtaEnergy('ghost', {
+        from: '2026-03-01',
+        interval: 'Hour',
+        to: '2026-03-02',
+      })
+
+      expect(result.ok).toBe(true)
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({ url: '/telemetry/telemetry/energy/ghost' }),
+      )
     })
   })
 
@@ -1115,20 +1135,10 @@ describe('melcloud home API', () => {
       })
     })
 
-    it('folds an unknown id into not-found on the other Result methods', async () => {
+    it('folds an unknown id into not-found on the temperature report', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
-      await expect(
-        api.getEnergy('ghost', {
-          from: '2026-05-01',
-          interval: 'Hour',
-          to: '2026-05-02',
-        }),
-      ).resolves.toStrictEqual({
-        error: { entityId: 'ghost', kind: 'not-found' },
-        ok: false,
-      })
       await expect(
         api.getTemperatures('ghost', {
           from: '2026-05-01',
@@ -1235,62 +1245,50 @@ describe('melcloud home API', () => {
       )
     })
 
-    it.each([
-      { measure: 'consumed', wireMeasure: 'interval_energy_consumed' },
-      { measure: 'produced', wireMeasure: 'interval_energy_produced' },
-    ] as const)(
-      'getEnergy maps $measure to $wireMeasure',
-      async ({ measure, wireMeasure }) => {
-        setupSuccessfulLogin()
-        const api = await createApi()
-        api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
-        mockRequest.mockResolvedValueOnce(
-          mockHttpResponse(mockEnergyData, {}, 200),
-        )
-        await api.getEnergy('atw-1', {
-          from: '2026-05-01',
-          interval: 'Hour',
-          measure,
-          to: '2026-05-02',
-        })
-
-        expect(mockRequest).toHaveBeenLastCalledWith(
-          expect.objectContaining({
-            params: {
-              from: '2026-05-01 00:00',
-              interval: 'Hour',
-              measure: wireMeasure,
-              to: '2026-05-02 00:00',
-            },
-            url: '/telemetry/telemetry/energy/atw-1',
-          }),
-        )
-      },
-    )
-
-    it('getEnergy defaults an omitted measure to consumed on ATW', async () => {
+    // The combined-energy report reads a zoneless bound as the unit's
+    // own wall clock: the `Z` is what pins the instant.
+    it('getAtwEnergy hits /report/v1/combined-energy with Z-pinned .NET-format dates', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
-      mockRequest.mockResolvedValueOnce(
-        mockHttpResponse(mockEnergyData, {}, 200),
-      )
-      await api.getEnergy('atw-1', {
-        from: '2026-05-01',
-        interval: 'Hour',
-        to: '2026-05-02',
+      const report = homeEnergyReport({
+        interval_energy_consumed: [['2026-05-01T06:00:00', 0.5]],
+        interval_energy_produced: [['2026-05-01T06:00:00', 2]],
+        outside_temperature: [['2026-05-01T06:00:00', null]],
+      })
+      mockRequest.mockResolvedValueOnce(mockHttpResponse([report], {}, 200))
+      const result = await api.getAtwEnergy('atw-1', {
+        from: '2026-04-30T22:00:00Z',
+        period: 'Daily',
+        to: '2026-05-01T22:00:00Z',
       })
 
+      expect(result).toStrictEqual({ ok: true, value: [report] })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
-            from: '2026-05-01 00:00',
-            interval: 'Hour',
-            measure: 'interval_energy_consumed',
-            to: '2026-05-02 00:00',
+            from: '2026-04-30T22:00:00.0000000Z',
+            period: 'Daily',
+            to: '2026-05-01T22:00:00.0000000Z',
+            unitId: 'atw-1',
           },
+          url: '/report/v1/combined-energy',
         }),
       )
+    })
+
+    it('getAtwEnergy answers a validation failure for a report without datasets', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse([{ reportPeriod: 'daily' }], {}, 200),
+      )
+      const result = await api.getAtwEnergy('atw-1', {
+        from: '2026-04-30T22:00:00Z',
+        period: 'Daily',
+        to: '2026-05-01T22:00:00Z',
+      })
+
+      expect(result).toMatchObject({ error: { kind: 'validation' }, ok: false })
     })
 
     it('getErrorLog hits /monitor/atwunit/{id}/errorlog', async () => {

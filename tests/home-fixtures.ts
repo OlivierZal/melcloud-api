@@ -16,10 +16,10 @@ import type {
   HomeContext,
   HomeEnergyData,
   HomeEnergyPoint,
+  HomeEnergyReportData,
   HomeFrostProtection,
   HomeHolidayMode,
   HomeOverheatProtection,
-  HomeReportPoint,
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
@@ -232,6 +232,7 @@ export interface HomeAtwDeviceDataOverrides {
   readonly name?: string
   readonly rssi?: number
   readonly settings?: Record<string, string>
+  readonly timeZone?: string
 }
 
 const HOME_ATW_DEFAULTS: Required<
@@ -245,6 +246,7 @@ const HOME_ATW_DEFAULTS: Required<
   name: 'Home ATW device',
   rssi: DEFAULT_RSSI_DBM,
   settings: {},
+  timeZone: 'Europe/Paris',
 }
 
 export const homeAtwDeviceData = (
@@ -260,6 +262,7 @@ export const homeAtwDeviceData = (
     name,
     rssi,
     settings,
+    timeZone,
   } = { ...HOME_ATW_DEFAULTS, ...overrides }
   return mock<HomeAtwDeviceData>({
     capabilities: { ...defaultHomeAtwCapabilities, ...capabilities },
@@ -275,6 +278,7 @@ export const homeAtwDeviceData = (
     overheatProtection: null,
     rssi,
     settings: buildSettings(settings),
+    timeZone,
   })
 }
 
@@ -303,18 +307,36 @@ export const typedHomeAtwDeviceData = (
 
 /**
  * One `(x, y)` report sample in the wire's single-letter point shape.
- * @param time - Sample timestamp (UTC wall-clock ISO).
- * @param value - Sample value.
+ * @param time - Sample timestamp (wall-clock ISO).
+ * @param value - Sample value; `null` is a gap, which only the
+ * combined-energy report admits.
  * @returns The wire-shaped point.
  */
-export const homeReportPoint = (
+export const homeReportPoint = <T extends number | null>(
   time: string,
-  value: number,
-): HomeReportPoint => ({
+  value: T,
+): { x: string; y: T } => ({
   /* eslint-disable id-length -- match the wire point shape */
   x: time,
   y: value,
   /* eslint-enable id-length -- end of the wire point literal */
+})
+
+/**
+ * One combined-energy report in its wire shape: a dataset per id, its
+ * points spelled as `[label, value]` pairs.
+ * @param datasets - Points per dataset id.
+ * @returns The wire-shaped report.
+ */
+export const homeEnergyReport = (
+  datasets: Readonly<
+    Record<string, readonly (readonly [label: string, value: number | null])[]>
+  >,
+): HomeEnergyReportData => ({
+  datasets: Object.entries(datasets).map(([id, points]) => ({
+    data: points.map(([label, value]) => homeReportPoint(label, value)),
+    id,
+  })),
 })
 
 /**
@@ -336,9 +358,10 @@ export const createMockHomeApi = (
   overrides: Partial<HomeAPIAdapter> = {},
 ): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
+    getAtaEnergy: vi.fn<HomeAPIAdapter['getAtaEnergy']>(),
+    getAtwEnergy: vi.fn<HomeAPIAdapter['getAtwEnergy']>(),
     getAtwInternalTemperatures:
       vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
-    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
     getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),

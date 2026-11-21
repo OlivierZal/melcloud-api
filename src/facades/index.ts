@@ -1,4 +1,11 @@
 export type {
+  HomeAtwEnergySeries,
+  HomeEnergyQuery,
+  HomeEnergySeries,
+  HomeEnergySeriesPoint,
+  HomeEnergySeriesQuery,
+} from './home-energy.ts'
+export type {
   ReportChartBand,
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -35,13 +42,7 @@ export {
   toGroupFanSpeed,
   toHomeAtaValues,
 } from './home-ata-group.ts'
-export {
-  type HomeEnergyInterval,
-  type HomeEnergyQuery,
-  type HomeEnergySeriesPoint,
-  type HomeEnergySeriesQuery,
-  HomeBaseDeviceFacade,
-} from './home-base-device.ts'
+export { HomeBaseDeviceFacade } from './home-base-device.ts'
 export { HomeBuildingFacade } from './home-building.ts'
 export { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export { HomeDeviceAtwFacade } from './home-device-atw.ts'

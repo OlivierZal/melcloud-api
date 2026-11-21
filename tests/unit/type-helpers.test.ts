@@ -1,13 +1,15 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
-import type { HomeEnergyQuery } from '../../src/facades/home-base-device.ts'
 import type { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import type { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
+import type {
+  HomeAtwEnergySeries,
+  HomeEnergySeries,
+} from '../../src/facades/home-energy.ts'
 import {
-  type HomeAtaDeviceData,
   type HomeAtaValues,
-  type HomeAtwDeviceData,
   type HomeAtwValues,
+  type Result,
   err,
   mapResult,
   ok,
@@ -54,24 +56,26 @@ describe.concurrent(mapResult, () => {
   })
 })
 
-// The conditional is the SOLE compile-time enforcement of the ATW
-// measure requirement (the adapter beneath takes `measure?` and defaults
-// it), and the bivariant subclass overrides are what keep the update
-// payloads per-type: a silent degradation of either would leave every
-// runtime test green, so both contracts are pinned at the type level.
+// The per-type return of the energy read is what tells a consumer an
+// air-to-air unit has no production to offer, and the bivariant
+// subclass overrides are what keep the update payloads per-type: a
+// silent degradation of either would leave every runtime test green,
+// so both contracts are pinned at the type level.
 describe('home per-type facade contracts', () => {
-  it('requires the energy direction on ATW and refuses it on ATA', () => {
-    expectTypeOf<HomeEnergyQuery<HomeAtwDeviceData>>().toEqualTypeOf<{
-      from: string
-      interval: string
-      measure: 'consumed' | 'produced'
-      to: string
-    }>()
-    expectTypeOf<HomeEnergyQuery<HomeAtaDeviceData>>().toEqualTypeOf<{
-      from: string
-      interval: string
-      to: string
-    }>()
+  it('answers one energy direction on ATA and both on ATW', () => {
+    expectTypeOf<
+      Awaited<ReturnType<HomeDeviceAtaFacade['getEnergySeries']>>
+    >().toEqualTypeOf<Result<HomeEnergySeries>>()
+    expectTypeOf<
+      Awaited<ReturnType<HomeDeviceAtwFacade['getEnergySeries']>>
+    >().toEqualTypeOf<Result<HomeAtwEnergySeries>>()
+  })
+
+  // The raw read is the telemetry endpoint's, which serves air-to-air
+  // units alone.
+  it('keeps the raw telemetry read off the ATW facade', () => {
+    expectTypeOf<HomeDeviceAtaFacade>().toHaveProperty('getEnergy')
+    expectTypeOf<HomeDeviceAtwFacade>().not.toHaveProperty('getEnergy')
   })
 
   it('narrows each facade updateValues to its own payload', () => {

@@ -24,8 +24,8 @@ import {
   type HomeAtaDeviceCapabilities,
   type HomeAtaDeviceData,
   type HomeAtaValues,
+  type HomeEnergyData,
   type Result,
-  mapResult,
   ok,
 } from '../types/index.ts'
 import { clampToRange, resolved } from '../utils.ts'
@@ -37,16 +37,13 @@ import {
 } from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
-  resolveHomeReportWindow,
-  toHomeEnergyBucketUnit,
-  toHomeEnergyInterval,
-  toHomeEnergyOptions,
-  toHomeWireWindow,
-} from './home-report.ts'
-
-// The ATA cumulative energy measure reports watt-hours (100 Wh pulses,
-// live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).
-const WATT_HOURS_PER_KILOWATT_HOUR = 1000
+  type HomeEnergyQuery,
+  type HomeEnergySeries,
+  type HomeEnergySeriesQuery,
+  getHomeAtaEnergyReport,
+  getHomeAtaEnergySeries,
+} from './home-energy.ts'
+import { resolveHomeReportWindow } from './home-report.ts'
 
 // Half-degree units advertise it; the rest step by a whole degree.
 const HALF_DEGREE_STEP = 0.5
@@ -150,41 +147,56 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     return this.#enumSetting('VaneVerticalDirection')
   }
 
-  protected override readonly wireUnitsPerKilowattHour: number =
-    WATT_HOURS_PER_KILOWATT_HOUR
+  /**
+   * Fetches the raw energy telemetry of this device — the cumulative
+   * consumption counter, in watt-hours, one request, wire-verbatim.
+   * The escape hatch beside {@link getEnergySeries}, which owns the
+   * dialect: the wire answers 24 hour buckets from `from` whatever `to`
+   * says, so here a longer window is the caller's to chunk and a
+   * shorter one the caller's to cut.
+   * @param params - Query window and bucket grain.
+   * @returns The telemetry bundle, or a typed failure.
+   */
+  public async getEnergy(
+    params: HomeEnergyQuery,
+  ): Promise<Result<HomeEnergyData>> {
+    return this.api.getAtaEnergy(this.id, params)
+  }
 
   /**
-   * Fetches the energy report as line chart data on a daily grid — the
-   * Home counterpart of the Classic `getEnergyReport` contract. The
-   * single ATA measure is cumulative consumption in watt-hours, scaled
-   * to `kWh`; days the wire omits (idle) chart as `0`.
+   * Fetches the energy report as line chart data — the Home counterpart
+   * of the Classic `getEnergyReport` contract. The single ATA measure
+   * is consumption, charted in `kWh`: hour buckets on a one-day span,
+   * calendar days of the display timezone up to a week, the wire's UTC
+   * days beyond; a bucket the wire omits (idle) charts as `0`.
    * @param query - Optional ISO date range.
    * @returns Structured line chart options (`kWh`), or a typed failure.
    */
   public async getEnergyReport(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
-    const window = resolveHomeReportWindow(query, this.chartTimezone)
-    const bucketUnit = toHomeEnergyBucketUnit(window)
-    return mapResult(
-      await this.api.getEnergy(this.id, {
-        ...toHomeWireWindow(window),
-        interval: toHomeEnergyInterval(bucketUnit),
-      }),
-      (data) =>
-        toHomeEnergyOptions({
-          bucketUnit,
-          locale: this.api.locale,
-          sources: [
-            {
-              data,
-              name: 'Consumed',
-              scale: 1 / this.wireUnitsPerKilowattHour,
-            },
-          ],
-          window,
-        }),
+    return getHomeAtaEnergyReport(
+      this.api,
+      this.id,
+      resolveHomeReportWindow(query, this.chartTimezone),
     )
+  }
+
+  /**
+   * Fetches the hourly energy of this device as the normalized series:
+   * each bucket's start as an epoch-ms instant, its consumption in
+   * kilowatt-hours (the wire's watt-hours, scaled here), oldest first.
+   * Hour buckets are the finest grain the wire serves, on the UTC
+   * clock; the hour in progress is there and moves in the counter's
+   * 100 Wh steps. A garbled sample degrades field-by-field to `null` —
+   * never `NaN`, never a throw — and keeps its entry.
+   * @param query - Read window.
+   * @returns The normalized series, or a typed failure.
+   */
+  public async getEnergySeries(
+    query: HomeEnergySeriesQuery,
+  ): Promise<Result<HomeEnergySeries>> {
+    return getHomeAtaEnergySeries(this.api, this.id, query)
   }
 
   /**

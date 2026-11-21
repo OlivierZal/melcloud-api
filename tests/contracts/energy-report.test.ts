@@ -25,6 +25,7 @@ import {
   homeAtwDevice,
   homeDevice,
   homeEnergyEnvelope,
+  homeEnergyReport,
 } from '../home-fixtures.ts'
 
 // The one window every dialect is asked about: explicit bounds, so no
@@ -121,8 +122,8 @@ const homeAtaEnergyResponse = ok(
 describeEnergyReportContract('Home ATA device', async () => {
   const facade = new HomeDeviceAtaFacade(
     createMockHomeApi({
-      getEnergy: vi
-        .fn<HomeAPIAdapter['getEnergy']>()
+      getAtaEnergy: vi
+        .fn<HomeAPIAdapter['getAtaEnergy']>()
         .mockResolvedValue(homeAtaEnergyResponse),
       timezone: 'UTC',
     }),
@@ -131,17 +132,26 @@ describeEnergyReportContract('Home ATA device', async () => {
   return facade.getEnergyReport(WINDOW)
 })
 
+// The air-to-water wire is another endpoint altogether — one report
+// carrying both directions, labelled on the unit's own clock.
+const homeAtwEnergyPoints = [
+  ['2026-03-01T00:00:00', 0.571],
+  ['2026-03-02T00:00:00', 0.229],
+] as const
+
+const homeAtwEnergyResponse = ok([
+  homeEnergyReport({
+    interval_energy_consumed: homeAtwEnergyPoints,
+    interval_energy_produced: homeAtwEnergyPoints,
+  }),
+])
+
 describeEnergyReportContract('Home ATW device', async () => {
   const facade = new HomeDeviceAtwFacade(
     createMockHomeApi({
-      getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>().mockResolvedValue(
-        ok({
-          measureData: [
-            { type: 'interval_energy_consumed', values: homeEnergyValues },
-            { type: 'interval_energy_produced', values: homeEnergyValues },
-          ],
-        }),
-      ),
+      getAtwEnergy: vi
+        .fn<HomeAPIAdapter['getAtwEnergy']>()
+        .mockResolvedValue(homeAtwEnergyResponse),
       timezone: 'UTC',
     }),
     homeAtwDevice({ id: 'contract-energy-atw' }),
