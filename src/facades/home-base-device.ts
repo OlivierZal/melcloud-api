@@ -72,9 +72,10 @@ export const toHomeProtectionState = (
 /**
  * Maps a Home `/context` holiday descriptor onto the cross-dialect read
  * state; `null` (never configured) passes through. The wire holds a
- * window on its unit's own wall clock (CLAUDE.md, the two-clocks entry,
- * has the measure), and both bounds come back projected onto the
- * caller's.
+ * window on its unit's own wall clock (CLAUDE.md, the holiday-window
+ * entry, has the measures), and both bounds come back projected onto
+ * the caller's; one in the hour that clock repeats reads as its first
+ * pass, the wire's zoneless bound telling neither.
  * @param holidayMode - Wire descriptor, or `null`.
  * @param zones - The two clocks.
  * @param zones.from - The unit's IANA timezone, off its `/context` entry.
@@ -461,9 +462,9 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * out on the unit's own clock, which the registry's model tells.
    * @param update - The new holiday-mode window.
    * @throws A {@link RangeError} when an enabled window is malformed or
-   * ends before it can start, an {@link EntityNotFoundError} when it is
-   * enabled on a unit the registry no longer holds; both before any
-   * request.
+   * ends before it can start on the unit's clock, an
+   * {@link EntityNotFoundError} when it is enabled on a unit the
+   * registry no longer holds; both before any request.
    */
   public async updateHolidayMode(update: HolidayModeUpdate): Promise<void> {
     await pushHomeHolidayMode(this.api, this.ownUnits, update)

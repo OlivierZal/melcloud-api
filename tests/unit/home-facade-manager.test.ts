@@ -15,6 +15,7 @@ import {
   isHomeAtwFacade,
 } from '../../src/facades/home-types.ts'
 import { Temporal } from '../../src/temporal.ts'
+import { onHost } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeAtwDevice,
@@ -276,19 +277,23 @@ describe('holiday-mode write projection', () => {
     })
   })
 
+  // The host sits in Tokyo, which is never on UTC: a fallback to UTC,
+  // the assumption this write once made of the wire, has to change the
+  // result (a host in London would not tell the two apart in winter).
   it("reads the caller's clock off the host when the API names none", async () => {
     homeDevice({ id: 'device-1', timeZone: 'America/New_York' })
-    vi.spyOn(Temporal.Now, 'timeZoneId').mockReturnValue('Europe/London')
     const api = createMockHomeApi()
 
-    await writeHolidayMode(api, ['device-1'], WEEK)
-    vi.mocked(Temporal.Now.timeZoneId).mockRestore()
+    await onHost('Asia/Tokyo', async () =>
+      writeHolidayMode(api, ['device-1'], WEEK),
+    )
 
-    // 08:00 in London is 03:00 in New York, five hours behind.
+    // 08:00 in Tokyo is 18:00 the day before in New York, fourteen
+    // hours behind.
     expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
       enabled: true,
-      endDate: '2026-12-01T03:00:00',
-      startDate: '2026-11-24T03:00:00',
+      endDate: '2026-11-30T18:00:00',
+      startDate: '2026-11-23T18:00:00',
       units: { ATA: ['device-1'] },
     })
   })
@@ -316,7 +321,7 @@ describe('holiday-mode write projection', () => {
     })
   })
 
-  it("sends every clock's window when one of the writes fails", async () => {
+  it('surfaces a single failed write as itself, the other clock written all the same', async () => {
     homeDevice({ id: 'paris-ata', timeZone: 'Europe/Paris' })
     homeDevice({ id: 'london-ata', timeZone: 'Europe/London' })
     const refusal = new Error('refused')
@@ -333,6 +338,28 @@ describe('holiday-mode write projection', () => {
       writeHolidayMode(api, ['paris-ata', 'london-ata'], WEEK),
     ).rejects.toBe(refusal)
     expect(updateHolidayMode).toHaveBeenCalledTimes(2)
+  })
+
+  it("bundles the failures when several clocks' writes fail", async () => {
+    homeDevice({ id: 'paris-ata', timeZone: 'Europe/Paris' })
+    homeDevice({ id: 'london-ata', timeZone: 'Europe/London' })
+    const failures = [new Error('refused in Paris'), new Error('lost')]
+    const updateHolidayMode = vi
+      .fn<HomeAPIAdapter['updateHolidayMode']>()
+      .mockRejectedValueOnce(failures[0])
+      .mockRejectedValueOnce(failures[1])
+    const api = createMockHomeApi({
+      timezone: 'Europe/Paris',
+      updateHolidayMode,
+    })
+
+    await expect(
+      writeHolidayMode(api, ['paris-ata', 'london-ata'], WEEK),
+    ).rejects.toMatchObject({
+      errors: failures,
+      message: 'Holiday mode update failed on unit clocks',
+      name: 'AggregateError',
+    })
   })
 
   // The wire arms a window at its start and takes none that has begun:
@@ -382,7 +409,9 @@ describe('holiday-mode write projection', () => {
   })
 
   // The wire stores a window that ends before it starts without a word
-  // (a 200, the window enabled), so the refusal has to come from here.
+  // (a 200, the window enabled), so the refusal has to come from here,
+  // and it is judged on what the wire receives: the bounds on the
+  // unit's clock, to the second.
   it.each([
     {
       endDate: '2026-11-30T08:00',
@@ -397,6 +426,11 @@ describe('holiday-mode write projection', () => {
     {
       endDate: '2026-11-21T17:01:00',
       label: 'would end the second it starts',
+      startDate: '2026-11-21T17:00:00',
+    },
+    {
+      endDate: '2026-11-21T17:01:00.5',
+      label: 'would start and end within one second of the wire',
       startDate: '2026-11-21T17:00:00',
     },
     {
@@ -416,10 +450,32 @@ describe('holiday-mode write projection', () => {
           isEnabled: true,
           startDate,
         }),
-      ).rejects.toThrow(RangeError)
+      ).rejects.toThrow(
+        new RangeError('The holiday-mode window ends before it can start'),
+      )
       expect(api.updateHolidayMode).not.toHaveBeenCalled()
     },
   )
+
+  // Paris puts its clocks back on 2027-10-31 at 01:00 UTC: 00:50 UTC is
+  // 02:50 there and 01:10 UTC is 02:10, an hour the clock runs twice. A
+  // caller on another clock asks twenty minutes in order, and the
+  // zoneless bounds the wire would get read backwards.
+  it("refuses a window whose bounds read backwards on the unit's clock", async () => {
+    homeDevice({ id: 'device-1', timeZone: 'Europe/Paris' })
+    const api = createMockHomeApi({ timezone: 'UTC' })
+
+    await expect(
+      writeHolidayMode(api, ['device-1'], {
+        endDate: '2027-10-31T01:10',
+        isEnabled: true,
+        startDate: '2027-10-31T00:50',
+      }),
+    ).rejects.toThrow(
+      new RangeError('The holiday-mode window ends before it can start'),
+    )
+    expect(api.updateHolidayMode).not.toHaveBeenCalled()
+  })
 
   it('refuses a malformed bound before any request', async () => {
     homeDevice({ id: 'device-1', timeZone: 'Europe/Paris' })
@@ -427,6 +483,19 @@ describe('holiday-mode write projection', () => {
 
     await expect(
       writeHolidayMode(api, ['device-1'], { ...WEEK, endDate: 'not-a-date' }),
+    ).rejects.toThrow(RangeError)
+    expect(api.updateHolidayMode).not.toHaveBeenCalled()
+  })
+
+  // Every clock's write is built before the first goes out: the unit
+  // whose clock cannot be read must not leave the other one written.
+  it('writes no clock at all when one unit names a timezone the runtime does not know', async () => {
+    homeDevice({ id: 'paris-ata', timeZone: 'Europe/Paris' })
+    homeDevice({ id: 'odd-ata', timeZone: 'Romance Standard Time' })
+    const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+
+    await expect(
+      writeHolidayMode(api, ['paris-ata', 'odd-ata'], WEEK),
     ).rejects.toThrow(RangeError)
     expect(api.updateHolidayMode).not.toHaveBeenCalled()
   })

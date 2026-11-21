@@ -67,10 +67,11 @@ export interface HolidayModeState {
  * the full window, and say "from now" with a start of now. Classic
  * sends that start as given; Home sends any start that is not a minute
  * ahead of now a minute ahead, its wire arming a window at its start
- * and taking none that has begun. On Home an enabled window that ends
- * before it can start is refused before any request (a `RangeError`),
- * the wire storing one without a word; on Classic MELCloud is the
- * judge.
+ * and taking none that has begun, a window already running included.
+ * On Home an enabled window that ends before it can start, as the
+ * unit's clock reads it to the second, is refused before any request
+ * (a `RangeError`), the wire storing one without a word; on Classic
+ * MELCloud is the judge.
  * @category Facades
  */
 export interface HolidayModeUpdate {

@@ -5,7 +5,7 @@ import type { HomeBuildingFacade } from '../../src/facades/home-building.ts'
 import { HomeRegistry } from '../../src/entities/home-registry.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import { Temporal } from '../../src/temporal.ts'
-import { okValue } from '../helpers.ts'
+import { okValue, onHost } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeBuildingRef,
@@ -172,6 +172,28 @@ describe('home building facade — per-target settings', () => {
       endDate: '2026-08-05T00:00:00',
       isEnabled: true,
       startDate: '2026-08-01T00:00:00',
+    })
+  })
+
+  // The host sits in Tokyo, which is never on UTC, and the members in
+  // Paris.
+  it("reads the members' window on the host's clock when the API names none", async () => {
+    const api = createMockHomeApi({ registry: new HomeRegistry() })
+    syncMixedBuilding(api, {
+      ataHoliday: PARIS_HOLIDAY,
+      atwHoliday: PARIS_HOLIDAY,
+    })
+
+    // Midnight in a Paris summer is 07:00 in Tokyo.
+    await expect(
+      onHost('Asia/Tokyo', async () => buildingOf(api).getHolidayMode()),
+    ).resolves.toStrictEqual({
+      ok: true,
+      value: {
+        endDate: '2026-08-05T07:00:00',
+        isEnabled: true,
+        startDate: '2026-08-01T07:00:00',
+      },
     })
   })
 

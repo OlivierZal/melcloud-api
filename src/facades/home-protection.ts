@@ -1,6 +1,9 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HolidayModeUpdate } from '../holiday-mode.ts'
-import type { HomeProtectionUnits } from '../types/index.ts'
+import type {
+  HomeHolidayModePostData,
+  HomeProtectionUnits,
+} from '../types/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {
   type ProtectionUpdate,
@@ -10,17 +13,27 @@ import {
 import { Temporal } from '../temporal.ts'
 import { settleWrites } from './settle-writes.ts'
 
+// The two instants a holiday window runs between.
+interface HolidayWindow {
+  readonly end: Temporal.Instant
+  readonly start: Temporal.Instant
+}
+
 // How far ahead of now an enabled holiday window starts at the least.
 // The Home wire arms a window AT its start and takes none that has
 // begun: an enabling write whose start is not ahead of the unit's clock
 // answers 404 while the window is stored, enabled, and does not arm
 // (live-probed 2026-11-21 on one unit: starts of now, of ten minutes
 // and of about an hour before, each refused and not armed for as long
-// as it was watched, 75 s at the least; starts 20 s, 30 s and 3 min
-// ahead accepted and found armed at the first read after their start).
-// So "from now" goes out a minute ahead — inside what was measured,
-// with the time a slow request needs to arrive before the start it
-// carries.
+// as it was watched, 75 s at the least; starts 20 s, 30 s, a minute and
+// 3 min ahead accepted and found armed at the first read after their
+// start). Over a window that is RUNNING the refusal costs more: it
+// leaves the window inactive and the unit off, nothing armed to bring
+// it back, where a start a minute ahead is accepted, the unit staying
+// off through that minute. So "from now", and the start of a window
+// already running, go out a minute ahead — inside what was measured,
+// with the time a slow request, or a host clock running late, needs to
+// arrive before the start it carries.
 const HOLIDAY_START_LEAD = Temporal.Duration.from({ minutes: 1 })
 
 // A write scoped to no unit at all is a semantic no-op: resolve without
@@ -33,30 +46,47 @@ const isEmptyUnits = ({ ATA: ata, ATW: atw }: HomeProtectionUnits): boolean =>
 const toInstant = (wallClock: string, timeZone: string): Temporal.Instant =>
   Temporal.PlainDateTime.from(wallClock).toZonedDateTime(timeZone).toInstant()
 
-// The wire's own spelling of a bound: whole seconds, no zone.
-const toWallClock = (instant: Temporal.Instant, timeZone: string): string =>
-  instant
-    .toZonedDateTimeISO(timeZone)
-    .toPlainDateTime()
-    .toString({ smallestUnit: 'second' })
-
-// The two instants an enabled window is written with: the caller's
-// bounds, the start no closer to now than the wire can arm. A window
-// that ends before that start is refused here, the wire storing one
-// without a word (a 200, the window enabled as sent, measured the same
-// day); a malformed bound throws on its parse. Both before any request.
+// The two instants an enabled window is asked with: the caller's
+// bounds, the start no closer to now than the wire can arm. A malformed
+// bound throws on its parse.
 const toArmableWindow = (
   { endDate, startDate }: Pick<HolidayModeUpdate, 'endDate' | 'startDate'>,
   timeZone = Temporal.Now.timeZoneId(),
-): { end: Temporal.Instant; start: Temporal.Instant } => {
+): HolidayWindow => {
   const earliest = Temporal.Now.instant().add(HOLIDAY_START_LEAD)
   const given = toInstant(startDate, timeZone)
-  const start = Temporal.Instant.compare(given, earliest) < 0 ? earliest : given
-  const end = toInstant(endDate, timeZone)
-  if (Temporal.Instant.compare(end, start) <= 0) {
+  return {
+    end: toInstant(endDate, timeZone),
+    start: Temporal.Instant.compare(given, earliest) < 0 ? earliest : given,
+  }
+}
+
+// A bound as the wire reads it: the unit's wall clock, to the second.
+const toWallClock = (
+  instant: Temporal.Instant,
+  timeZone: string,
+): Temporal.PlainDateTime =>
+  instant
+    .toZonedDateTimeISO(timeZone)
+    .toPlainDateTime()
+    .round({ roundingMode: 'trunc', smallestUnit: 'second' })
+
+// One clock's window, as its write carries it. The order of the bounds
+// is judged HERE, on what the wire receives: it stores a window that
+// ends before it starts without a word (a 200, the window enabled as
+// sent, measured the same day), and two instants in order still read
+// backwards on a clock in the hour it repeats, or as one second when
+// less than a second apart.
+const toClockWindow = (
+  { end, start }: HolidayWindow,
+  timeZone: string,
+): Pick<HomeHolidayModePostData, 'endDate' | 'startDate'> => {
+  const endDate = toWallClock(end, timeZone)
+  const startDate = toWallClock(start, timeZone)
+  if (Temporal.PlainDateTime.compare(endDate, startDate) <= 0) {
     throw new RangeError('The holiday-mode window ends before it can start')
   }
-  return { end, start }
+  return { endDate: endDate.toString(), startDate: startDate.toString() }
 }
 
 // The clock a unit's holiday window is read on: its own, which only
@@ -108,23 +138,26 @@ export const pushHomeFrostProtection = async (
 /**
  * Writes a holiday-mode window to the given unit buckets. The caller
  * speaks its own wall clock; the wire reads a window on each unit's
- * (CLAUDE.md, the two-clocks entry, has the measures), arms it at its
- * start and closes it at its end. An enabled window therefore goes out
- * as one write per clock the units sit on, each bound the same instant
- * on that clock, and a start that is not a minute ahead of now is sent
- * a minute ahead: the wire takes no window that has begun. A disabled
- * window's dates are ignored and pass through as given, in one write.
+ * (CLAUDE.md, the holiday-window entry, has the measures), arms it at
+ * its start and closes it at its end. An enabled window therefore goes
+ * out as one write per clock the units sit on, each bound the same
+ * instant on that clock, and a start that is not a minute ahead of now
+ * is sent a minute ahead: the wire takes no window that has begun. A
+ * disabled window's dates are ignored and pass through as given, in
+ * one write.
  * @param api - Home API client.
  * @param units - Device ids grouped by connection type.
  * @param update - The new holiday-mode window.
  * @param update.endDate - Window end, ISO 8601 wall-clock.
  * @param update.isEnabled - Whether holiday mode is on.
  * @param update.startDate - Window start, ISO 8601 wall-clock.
- * @throws A {@link RangeError} when an enabled window is malformed or
- * ends before it can start, an {@link EntityNotFoundError} when one of
- * its units has left the registry; both before any request. Then the
- * single failed write, or an `AggregateError` bundling every failure
- * when more than one rejects.
+ * @throws A {@link RangeError} when an enabled window is malformed,
+ * ends before it can start on a clock it is written on, or names a
+ * unit whose timezone the runtime does not know; an
+ * {@link EntityNotFoundError} when one of its units has left the
+ * registry. All before any request. Then the single failed write, or
+ * an `AggregateError` bundling every failure when more than one
+ * rejects.
  */
 export const pushHomeHolidayMode = async (
   api: HomeAPIAdapter,
@@ -138,16 +171,16 @@ export const pushHomeHolidayMode = async (
     await api.updateHolidayMode({ enabled: false, endDate, startDate, units })
     return
   }
-  const { end, start } = toArmableWindow({ endDate, startDate }, api.timezone)
+  const window = toArmableWindow({ endDate, startDate }, api.timezone)
+  // Every clock's write is built before the first goes out: a window
+  // one clock cannot take leaves none of the others written.
+  const writes = splitByClock(api, units).map(([timeZone, clockUnits]) => ({
+    enabled: true,
+    ...toClockWindow(window, timeZone),
+    units: clockUnits,
+  }))
   await settleWrites(
-    splitByClock(api, units).map(async ([timeZone, clockUnits]) =>
-      api.updateHolidayMode({
-        enabled: true,
-        endDate: toWallClock(end, timeZone),
-        startDate: toWallClock(start, timeZone),
-        units: clockUnits,
-      }),
-    ),
+    writes.map(async (postData) => api.updateHolidayMode(postData)),
     'Holiday mode update failed on unit clocks',
   )
 }

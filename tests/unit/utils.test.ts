@@ -18,7 +18,7 @@ import {
   toZonedWallClock,
   typedFromEntries,
 } from '../../src/utils.ts'
-import { okValue } from '../helpers.ts'
+import { okValue, onHost } from '../helpers.ts'
 
 describe.concurrent('ata set-to-list conversion', () => {
   it('maps set keys to list keys', () => {
@@ -249,23 +249,15 @@ describe('wall-clock projections', () => {
     },
   )
 
-  it('falls back to the host zone when none is given', () => {
-    const zone = Temporal.Now.timeZoneId()
-
-    expect(toUtcWallClock('2026-07-10T20:30').toString()).toBe(
-      Temporal.PlainDateTime.from('2026-07-10T20:30')
-        .toZonedDateTime(zone)
-        .withTimeZone('UTC')
-        .toPlainDateTime()
-        .toString(),
-    )
-    expect(toZonedWallClock('2026-07-10T18:30', { from: 'UTC' })).toBe(
-      Temporal.PlainDateTime.from('2026-07-10T18:30')
-        .toZonedDateTime('UTC')
-        .withTimeZone(zone)
-        .toPlainDateTime()
-        .toString(),
-    )
+  // The host is put in Tokyo, which is never on UTC: on a host that is
+  // (a CI runner), a fallback to UTC would otherwise read the same.
+  it('falls back to the host zone when none is given', async () => {
+    await expect(
+      onHost('Asia/Tokyo', () => [
+        toUtcWallClock('2026-07-10T20:30').toString(),
+        toZonedWallClock('2026-07-10T18:30', { from: 'UTC' }),
+      ]),
+    ).resolves.toStrictEqual(['2026-07-10T11:30:00', '2026-07-11T03:30:00'])
   })
 
   it('throws on a malformed write-side datetime', () => {
