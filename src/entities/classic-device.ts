@@ -44,14 +44,14 @@ export class ClassicDevice<
   /**
    * Builds a device model from a wire-format {@link ClassicListDevice} entry;
    * the typed `Device` payload is captured by reference for in-place sync.
-   * @param root0 - Wire-format list-device entry.
-   * @param root0.AreaID - Owning area identifier (or `null`).
-   * @param root0.BuildingID - Owning building identifier.
-   * @param root0.Device - Device payload kept by reference.
-   * @param root0.DeviceID - Device identifier.
-   * @param root0.DeviceName - Device display name.
-   * @param root0.FloorID - Owning floor identifier (or `null`).
-   * @param root0.Type - Device type discriminator.
+   * @param source - Wire-format list-device entry.
+   * @param source.AreaID - Owning area identifier (or `null`).
+   * @param source.BuildingID - Owning building identifier.
+   * @param source.Device - Device payload kept by reference.
+   * @param source.DeviceID - Device identifier.
+   * @param source.DeviceName - Device display name.
+   * @param source.FloorID - Owning floor identifier (or `null`).
+   * @param source.Type - Device type discriminator.
    */
   public constructor({
     AreaID: areaId,

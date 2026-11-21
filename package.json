@@ -96,11 +96,11 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@olivierzal/configs": "8.10.0",
+    "@olivierzal/configs": "8.11.0",
     "@types/node": "^26.1.2",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^5.0.0",
-    "eslint": "^10.12.0",
+    "eslint": "^10.15.0",
     "jiti": "^2.7.0",
     "prettier": "^3.9.6",
     "publint": "^0.3.22",

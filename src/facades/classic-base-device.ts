@@ -28,11 +28,11 @@ import {
   ok,
 } from '../types/index.ts'
 import {
+  createKeyGuard,
   formatLabels,
   fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
-  isKeyOf,
   isSetDeviceDataAtaInList,
   resolved,
   typedFromEntries,
@@ -347,7 +347,14 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   // The `@fetchDevices` decorator awaits a registry sync before this
-  // body runs; the body just exposes the now-fresh `this.data`.
+  // body runs; the body just exposes `this.data`.
+  /**
+   * Syncs the registry, then answers the device's data. The sync is
+   * best-effort: one that fails is logged by the client, and the
+   * answer is then the data of the last sync that passed.
+   * @returns The device's list data, as the registry holds it after
+   * the sync.
+   */
   @fetchDevices({
     refresh: async (self: BaseDeviceFacade<T>) => self.api.fetch(),
   })
@@ -356,6 +363,14 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return data
   }
 
+  /**
+   * Reads the device's current values from MELCloud. On success the
+   * answer is merged into the registry model, under its list-data
+   * keys; a failure is returned as is and leaves the model alone. The
+   * sync notification follows in both cases.
+   * @returns The device data as MELCloud answered it, or a typed
+   * failure.
+   */
   @syncDevices()
   public async getValues(): Promise<Result<ClassicGetDeviceData<T>>> {
     const { api, device } = this
@@ -368,13 +383,28 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return result
   }
 
+  /**
+   * Writes a change set to the device. The set is first reduced to
+   * the fields that differ from the last synced state — a key that is
+   * `undefined`, or unknown to the device type, counts as absent —
+   * then handed to the per-type rules, which clamp a field or add a
+   * companion one. Only the resulting fields are flagged for the unit
+   * to apply; the body carries the rest of the synced state around
+   * them, and no read precedes the write. The registry model then
+   * takes the fields the answer flags, and the sync notification
+   * fires.
+   * @param data - Fields to change.
+   * @returns MELCloud's answer to the write.
+   * @throws A {@link NoChangesError} when no field differs from the
+   * synced state: nothing is sent.
+   */
   @syncDevices()
   @classicUpdateDevice
   public async updateValues(
     data: Partial<ClassicUpdateDeviceData<T>>,
   ): Promise<ClassicSetDeviceData<T>> {
     const { api, id, setData: currentSetData, type } = this
-    const isKnownKey = isKeyOf(currentSetData)
+    const isKnownKey = createKeyGuard(currentSetData)
     // A present-`undefined` key counts as absent (JS callers can send
     // one); letting it through would raise a phantom `EffectiveFlags`
     // bit and bypass the `NoChangesError` guard.
@@ -406,6 +436,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     })
   }
 
+  /**
+   * Reads the raw energy report of the device over a window.
+   * @param query - Optional report time window.
+   * @returns The energy payload, or a typed failure.
+   * @throws A `TypeError` on a device type that has no energy report
+   * (ERV), before any request.
+   */
   public async getEnergy(
     query?: ReportQuery,
   ): Promise<Result<ClassicEnergyData<T>>> {
@@ -419,6 +456,17 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return this.api.getEnergy<T>({ postData: this.#buildReportPostData(query) })
   }
 
+  /**
+   * Charts the energy report of the device over a window, in kWh, one
+   * series per bucket its device type charts. The wire's numeric
+   * labels are rebuilt for display in the client's locale: clock
+   * labels on a one-day report, dates when the report holds one
+   * bucket per day of the window, the label type's own formatting
+   * otherwise. A device type without an energy report answers an
+   * empty chart, with no request.
+   * @param query - Optional report time window.
+   * @returns The line chart options, or a typed failure.
+   */
   public async getEnergyReport(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
@@ -451,6 +499,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     })
   }
 
+  /**
+   * Charts the hourly temperature report of the device, in °C: the
+   * given hour of today, or every hour of today so far when none is
+   * given — the hours still to come padded blank. A device type
+   * without internal temperatures answers an empty chart, with no
+   * request.
+   * @param hour - Hour of today to chart alone.
+   * @returns The line chart options, or a typed failure.
+   */
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
@@ -462,6 +519,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         )
   }
 
+  /**
+   * Charts the internal temperatures of the device over a window, in
+   * °C. A device type without that report (ATW alone has it) answers
+   * an empty chart, with no request.
+   * @param query - Optional report time window.
+   * @returns The line chart options, or a typed failure.
+   */
   public async getInternalTemperatures(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
@@ -483,6 +547,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     )
   }
 
+  /**
+   * Charts the operation-mode breakdown of the device over a window,
+   * as pie chart data: one segment per mode MELCloud reports.
+   * @param query - Optional report time window.
+   * @returns The pie chart options, or a typed failure.
+   */
   public async getOperationModes(
     query?: ReportQuery,
   ): Promise<Result<ReportChartPieOptions>> {
@@ -493,6 +563,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     )
   }
 
+  /**
+   * Charts the temperature log of the device over a window, in °C,
+   * under the legend of its device type. The read carries the
+   * location of the device's building.
+   * @param query - Optional report time window.
+   * @returns The line chart options, or a typed failure.
+   */
   public async getTemperatures(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {

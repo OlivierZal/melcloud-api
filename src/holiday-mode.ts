@@ -89,6 +89,7 @@ export interface HolidayModeUpdate {
  * `null` (the mixed marker).
  * @param states - One state (or `null`) per member.
  * @returns The aggregated state.
+ * @category Facades
  */
 export const aggregateHolidayModeStates = (
   states: readonly (HolidayModeState | null)[],

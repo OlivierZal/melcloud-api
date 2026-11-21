@@ -16,10 +16,10 @@ export class ClassicFloor extends BaseModel<ClassicFloorID> {
 
   /**
    * Builds a floor model from a wire-format {@link ClassicFloorData} entry.
-   * @param root0 - Wire-format floor data.
-   * @param root0.BuildingId - Owning building identifier.
-   * @param root0.ID - Floor identifier.
-   * @param root0.Name - Floor display name.
+   * @param data - Wire-format floor data.
+   * @param data.BuildingId - Owning building identifier.
+   * @param data.ID - Floor identifier.
+   * @param data.Name - Floor display name.
    */
   public constructor({
     BuildingId: buildingId,

@@ -43,13 +43,16 @@ export interface HomeChartWindow {
 // split wide windows into chunks and merge the reports.
 const MAX_REPORT_CHUNK_DAYS = 30
 
-// Worse for the labeled mode annotations: at period `Weekly` the BFF
-// truncates them to roughly the first two weeks of the window
-// (live-probed 2026-07-19 via `scripts/probe-weekly-annotations.ts`:
-// a 21-day Weekly query carried spans through day ~6 only, while the
-// same window in 7-day Hourly chunks covered it fully). Annotation
-// consumers (mode bands, operation-mode durations) therefore chunk at
-// the Hourly-period span.
+// At period `Weekly` the BFF truncates the labeled mode annotations
+// to roughly the first week of the window (live-probed 2026-07-19 via
+// `scripts/probe-weekly-annotations.ts`: a 21-day Weekly query carried
+// spans through day ~6 only, while the same window in 7-day Hourly
+// chunks covered it fully).
+/**
+ * Chunk span, in days, of the reads whose labeled mode annotations are
+ * consumed (mode bands, operation-mode durations): the span of the
+ * `Hourly` period, which answers them whole.
+ */
 export const MAX_ANNOTATION_CHUNK_DAYS = 7
 
 // Mode bands only make sense on the hourly grid: a daily grid rounds

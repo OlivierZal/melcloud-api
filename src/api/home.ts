@@ -633,7 +633,8 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param values - Partial setpoint payload matching the unit's
    * connection type — the shape is the caller's contract: the BFF
    * binder silently drops keys the routed unit does not know.
-   * @throws EntityNotFoundError when the registry does not hold the id.
+   * @throws An {@link EntityNotFoundError} when the registry does not
+   * hold the id.
    */
   public async updateValues(
     id: string,

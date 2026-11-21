@@ -571,6 +571,15 @@ export interface HomeReportTrigger {
   readonly value: number | null
 }
 
+/**
+ * Wire-format response of the MELCloud Home OIDC token endpoint
+ * (`/connect/token`), to an authorization-code exchange and to a
+ * refresh alike: the access token, its lifetime in seconds and, when
+ * the grant carries them, the id and refresh tokens. `token_type` is
+ * closed on `Bearer` on purpose: it guards the authorization scheme
+ * the client hard-codes.
+ * @category Types
+ */
 export interface HomeTokenResponse {
   readonly access_token: string
   readonly expires_in: number

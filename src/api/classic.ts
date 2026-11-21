@@ -48,7 +48,7 @@ import {
   mapResult,
   ok,
 } from '../types/index.ts'
-import { isKeyOf, isUninitializedWireDate, toEpochMs } from '../utils.ts'
+import { createKeyGuard, isUninitializedWireDate, toEpochMs } from '../utils.ts'
 import {
   type ClassicDeviceDropReason,
   type ClassicDroppedDevice,
@@ -89,7 +89,7 @@ const describeRefusal = (errorId: number | null | undefined): string =>
     ? `MELCloud Classic rejected the credentials (ErrorId ${String(errorId)})`
     : 'MELCloud Classic rejected the credentials'
 
-const isLanguage = isKeyOf(ClassicLanguage)
+const isLanguage = createKeyGuard(ClassicLanguage)
 
 const formatErrors = (errors: Record<string, readonly string[]>): string =>
   Object.entries(errors)
@@ -252,6 +252,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.runBestEffortSyncCycle(async () => this.#syncCycle())
   }
 
+  /**
+   * Read the energy report of one ATA or ATW device over a date range,
+   * from `/EnergyCost/Report`. One schema covers both payload shapes
+   * and validates the answer.
+   * @template T - Device type of the target, named by the caller: it
+   * narrows the payload type, and nothing checks it at runtime.
+   * @param options - Body of the read.
+   * @param options.postData - Device id and ISO date range.
+   * @returns The energy payload, or a typed failure.
+   */
   public async getEnergy<T extends ClassicDeviceType>({
     postData,
   }: {
@@ -267,6 +277,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read the raw error-log entries of the given devices from
+   * `/Report/GetUnitErrorLog2` — the wire read behind
+   * {@link getErrorLog}, which parses and pages them.
+   * @param options - Body of the read.
+   * @param options.postData - Device ids, and the date range or the
+   * rolling `Duration` to cover.
+   * @returns The wire entries or, when MELCloud refuses the query, its
+   * failure payload; a typed failure when the request itself fails.
+   */
   public async getErrorEntries({
     postData,
   }: {
@@ -335,6 +355,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read the frost-protection settings of a building, floor, area or
+   * device from `/FrostProtection/GetSettings`.
+   * @param options - Query of the read.
+   * @param options.params - Target id and the MELCloud table naming
+   * its level.
+   * @returns The settings, or a typed failure.
+   */
   public async getFrostProtection({
     params,
   }: {
@@ -347,6 +375,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read the state MELCloud holds for the ATA group of a building,
+   * floor or area, from `/Group/Get`.
+   * @param options - Body of the read.
+   * @param options.postData - The zone the group covers.
+   * @returns The group's specification and state, or a typed failure.
+   */
   public async getGroup({
     postData,
   }: {
@@ -358,6 +393,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     })
   }
 
+  /**
+   * Read the holiday-mode settings of a building, floor, area or
+   * device from `/HolidayMode/GetSettings`.
+   * @param options - Query of the read.
+   * @param options.params - Target id and the MELCloud table naming
+   * its level.
+   * @returns The settings, or a typed failure.
+   */
   public async getHolidayMode({
     params,
   }: {
@@ -370,6 +413,15 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read one hour of the temperature report of an ATW device from
+   * `/Report/GetHourlyTemperature`.
+   * @param options - Body of the read.
+   * @param options.postData - The device and the hour to read.
+   * @param options.postData.device - Device id.
+   * @param options.postData.hour - Hour of today to read.
+   * @returns The report data, or a typed failure.
+   */
   public async getHourlyTemperatures({
     postData,
   }: {
@@ -382,6 +434,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read the internal temperatures of an ATW device over a date range,
+   * from `/Report/GetInternalTemperatures2`.
+   * @param options - Body of the read.
+   * @param options.postData - Device id, ISO date range and optional
+   * rolling `Duration`.
+   * @returns The report data, or a typed failure.
+   */
   public async getInternalTemperatures({
     postData,
   }: {
@@ -394,6 +454,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read the operation-mode breakdown of a device over a date range,
+   * from `/Report/GetOperationModeLog2`.
+   * @param options - Body of the read.
+   * @param options.postData - Device id, ISO date range and optional
+   * rolling `Duration`.
+   * @returns One `{ Key, Value }` entry per mode, or a typed failure.
+   */
   public async getOperationModes({
     postData,
   }: {
@@ -406,6 +474,15 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read one hour of Wi-Fi signal strength for one or several devices
+   * from `/Report/GetSignalStrength`.
+   * @param options - Body of the read.
+   * @param options.postData - The devices and the hour to read.
+   * @param options.postData.devices - Device id, or ids.
+   * @param options.postData.hour - Hour of today to read.
+   * @returns The report data, or a typed failure.
+   */
   public async getSignal({
     postData,
   }: {
@@ -418,6 +495,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read the temperature log of a device over a date range, from
+   * `/Report/GetTemperatureLog2`.
+   * @param options - Body of the read.
+   * @param options.postData - Device id, ISO date range, optional
+   * rolling `Duration` and optional `Location` selector.
+   * @returns The report data, or a typed failure.
+   */
   public async getTemperatures({
     postData,
   }: {
@@ -430,6 +515,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     )
   }
 
+  /**
+   * Read the dashboard tiles of the given devices from `/Tile/Get2`.
+   * Selecting one of them adds its full device data to the answer.
+   * @param options - Body of the read.
+   * @param options.postData - Device ids, plus the building and device
+   * to select, if any.
+   * @returns The tiles, or a typed failure.
+   */
   public async getTiles({
     postData,
   }: {
@@ -443,8 +536,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   /**
    * Read the live device data for a single device.
-   * @param root0 - Destructured options.
-   * @param root0.params - `buildingId` + `id` of the target device.
+   * @template T - Device type of the target, named by the caller: it
+   * narrows the payload type, and nothing checks it at runtime.
+   * @param options - Query of the read.
+   * @param options.params - `buildingId` + `id` of the target device.
    * @returns The device-type-discriminated data payload.
    */
   public async getValues<T extends ClassicDeviceType>({
@@ -473,8 +568,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * returns {@link ClassicFailureData} with `AttributeErrors` describing the
    * rejected fields. Callers should branch on `Success` before reading
    * the remaining fields.
-   * @param root0 - Destructured options.
-   * @param root0.postData - Zone identifier + new temperature bounds.
+   * @param options - Body of the update.
+   * @param options.postData - Zone identifier + new temperature bounds.
    * @returns The success or failure payload.
    */
   public async updateFrostProtection({
@@ -490,8 +585,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
    * Apply an ATA group state update across every device in a building
    * zone. Same success/failure shape as {@link updateFrostProtection}.
-   * @param root0 - Destructured options.
-   * @param root0.postData - Group target + state fields to apply.
+   * @param options - Body of the update.
+   * @param options.postData - Group target + state fields to apply.
    * @returns The success or failure payload.
    */
   public async updateGroupState({
@@ -505,8 +600,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
    * Update holiday-mode settings for a zone. Same shape discrimination
    * as {@link updateFrostProtection}.
-   * @param root0 - Destructured options.
-   * @param root0.postData - Zone identifier + holiday-mode fields.
+   * @param options - Body of the update.
+   * @param options.postData - Zone identifier + holiday-mode fields.
    * @returns The success or failure payload.
    */
   public async updateHolidayMode({
@@ -538,8 +633,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   /**
    * Toggle power on one or more devices via `/Device/Power`.
-   * @param root0 - Destructured options.
-   * @param root0.postData - `DeviceIds` array + target `Power` state.
+   * @param options - Body of the command.
+   * @param options.postData - `DeviceIds` array + target `Power` state.
    * @returns The server-echoed power state.
    */
   public async updatePower({
@@ -552,10 +647,12 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   /**
    * Send a set-device payload to `/Device/SetAta`, `/Device/SetAtw`
-   * or `/Device/SetErv` depending on the `DeviceType` on the body.
-   * @param root0 - Destructured options.
-   * @param root0.postData - Discriminated set-device payload.
-   * @param root0.type - Device type selecting the target endpoint.
+   * or `/Device/SetErv` depending on `type`.
+   * @template T - Device type of the target: it selects the endpoint
+   * and the shapes of the body and of the answer.
+   * @param options - Body of the write and its routing.
+   * @param options.postData - Discriminated set-device payload.
+   * @param options.type - Device type selecting the target endpoint.
    * @returns The server response, narrowed by `DeviceType`.
    */
   public async updateValues<T extends ClassicDeviceType>({
@@ -647,8 +744,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * authentication flow: {@link authenticate} is the cross-dialect
    * entry, adding credential fallback, persistence of the resulting
    * `contextKey`/`expiry`, and the automatic 401 retry.
-   * @param root0 - Destructured options.
-   * @param root0.postData - Login credentials + app version + language.
+   * @param options - Body of the sign-in.
+   * @param options.postData - Login credentials + app version + language.
    * @returns The raw login payload, Zod-validated.
    */
   protected async login({

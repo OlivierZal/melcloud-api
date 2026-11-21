@@ -305,7 +305,7 @@ const extractRedirectTarget = (
  * @param options.remaining - Number of remaining redirects allowed.
  * @param options.url - Current URL to follow.
  * @returns The final response data and URL.
- * @throws {@link Error} when the redirect chain exceeds the maximum hop count.
+ * @throws An `Error` when the redirect chain exceeds the maximum hop count.
  */
 const authFollowRedirects = async ({
   abortSignal,
@@ -392,7 +392,7 @@ const refusedSubmissionMessage = (html: string): string => {
  * @param options.credentials - The user's login credentials.
  * @param options.jar - CookieJar for the auth flow.
  * @returns The callback location URL after credential submission.
- * @throws {@link AuthenticationError} when the credentials are rejected.
+ * @throws An {@link AuthenticationError} when the credentials are rejected.
  */
 const submitCredentials = async ({
   abortSignal,
@@ -440,7 +440,7 @@ const submitCredentials = async ({
  * @param abortSignal - Cancels the redirect chain mid-flight when triggered.
  * @returns The one-time `code` query value from the final IdentityServer
  * redirect.
- * @throws {@link AuthenticationError} when the callback carries no
+ * @throws An {@link AuthenticationError} when the callback carries no
  * authorization code.
  */
 const extractAuthorizationCode = async (

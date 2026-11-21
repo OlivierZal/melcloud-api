@@ -45,6 +45,7 @@ import type {
 /**
  * Facade for a MELCloud building, combining zone settings with super device
  * operations.
+ * @category Facades
  */
 export interface ClassicBuildingFacade
   extends ClassicBaseBuilding, ClassicZoneFacade {
@@ -59,6 +60,7 @@ export interface ClassicBuildingFacade
  * a single device by treating it as a group of one — MELCloud's native group
  * endpoints only address zones (building/floor/area), so a device emulates
  * them against its own state.
+ * @category Facades
  */
 export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
   typeof ClassicDeviceType.Ata
@@ -97,6 +99,7 @@ export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
 
 /**
  * Facade for Air-to-Water (ATW) devices with hot water and zone state access.
+ * @category Facades
  */
 export interface ClassicDeviceAtwFacade extends ClassicDeviceFacade<
   typeof ClassicDeviceType.Atw
@@ -125,6 +128,7 @@ export interface ClassicDeviceAtwFacade extends ClassicDeviceFacade<
  * generic device surface: the ERV ventilation-mode filtering refines
  * behavior, not shape, so the published name exists for symmetry with
  * the other device types.
+ * @category Facades
  */
 export type ClassicDeviceErvFacade = ClassicDeviceFacade<
   typeof ClassicDeviceType.Erv

@@ -66,6 +66,7 @@ const BOUNDS_KEY_BY_MODE: Record<
  * @returns The interval for that mode, or `null` when the mode is
  * outside the known vocabulary — unknown wire values pass through
  * unclamped rather than borrowing another mode's bounds.
+ * @category Facades
  */
 export const rangeForHomeMode = (
   bounds: AtaTemperatureBounds,

@@ -19,10 +19,10 @@ export class ClassicBuilding extends BaseModel<ClassicBuildingID> {
   /**
    * Builds a building model from a wire-format {@link ClassicBuildingData}
    * entry.
-   * @param root0 - Wire-format building data.
-   * @param root0.ID - Building identifier.
-   * @param root0.Location - Geographic location identifier.
-   * @param root0.Name - Building display name.
+   * @param data - Wire-format building data.
+   * @param data.ID - Building identifier.
+   * @param data.Location - Geographic location identifier.
+   * @param data.Name - Building display name.
    */
   public constructor({
     ID: id,

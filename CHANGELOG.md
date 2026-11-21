@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **Documentation only: the doc comments follow the tables of `@olivierzal/configs` 8.11.0.** Every public member of the Classic facades and of `ClassicAPI` carries a block of its own, where the class side had none; a destructured parameter is documented under a name (`options`, `data`, `filter`, `report`, `range`) where the published pages read `root0`; a `@throws` names the class it raises inside a sentence, and a documented generic names its type parameters. Two blocks now say what the code does: `ClassicAPI.updateValues` routes on `type`, not on a `DeviceType` of the body, and the sync a device facade's `fetch()` runs first is best-effort, so the data answered is that of the last sync that passed. The README's retry section named `GET` and three statuses: it lists what the client has retried since api-core 2.1.0 and 2.2.0, a 500 too, a failed connection or a request timeout, on any read, the Classic ones served over `POST` included. No behaviour, signature or export changes.
+
 ## [62.0.1] - 2026-11-21
 
 ### Fixed
@@ -1063,7 +1067,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.1...HEAD
 [62.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...v62.0.1
 [62.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v61.0.0...v62.0.0
 [61.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.9.0...v61.0.0

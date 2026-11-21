@@ -13,7 +13,7 @@ import type { LoginCredentials, UndefinedTolerant } from '../types/index.ts'
  * Session and infrastructure surface shared by both dialects' API
  * adapters — the cross-dialect base a consumer can program against
  * without knowing which wire it talks to.
- * @category API
+ * @category Configuration
  */
 export interface BaseAPIAdapter {
   /**
@@ -124,7 +124,7 @@ export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
  * {@link SettingManager}: credentials, expiry, and the login-backoff
  * gate (previously undeclared — a host clearing every declared key
  * left the backoff behind).
- * @category API
+ * @category Configuration
  */
 export interface BaseAPISettings {
   /**

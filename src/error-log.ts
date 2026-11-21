@@ -188,8 +188,9 @@ const parsePlainDate = (iso: string): Temporal.PlainDate => {
  * @param timeZone - IANA timezone anchoring "today" when `to` is unset;
  * the host's zone when omitted.
  * @returns The resolved window and its chained next-page bounds.
- * @throws Error with the `Invalid DateTime` prefix on an unparseable
+ * @throws An `Error` with the `Invalid DateTime` prefix on an unparseable
  * `from` or `to`.
+ * @category Facades
  */
 export const resolveErrorLogWindow = (
   { from, offset = 0, period = 1, to }: ErrorLogQuery,
@@ -237,8 +238,9 @@ export const resolveErrorLogWindow = (
  * @param timeZone - IANA timezone the entry's day is read in; the host's
  * zone when omitted.
  * @returns Whether the page holds the entry.
- * @throws Error with the `Invalid DateTime` prefix on an unparseable
+ * @throws An `Error` with the `Invalid DateTime` prefix on an unparseable
  * bound.
+ * @category Facades
  */
 export const isWithinErrorLogWindow = (
   { atEpochMs }: Pick<ErrorLogEntry, 'atEpochMs'>,

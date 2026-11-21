@@ -19,12 +19,12 @@ export class ClassicArea extends BaseModel<ClassicAreaID> {
 
   /**
    * Builds an area model from a wire-format {@link ClassicAreaData} entry.
-   * @param root0 - Wire-format area data.
-   * @param root0.BuildingId - Owning building identifier.
-   * @param root0.FloorId - Owning floor identifier (or `null` if directly under
+   * @param data - Wire-format area data.
+   * @param data.BuildingId - Owning building identifier.
+   * @param data.FloorId - Owning floor identifier (or `null` if directly under
    * the building).
-   * @param root0.ID - Area identifier.
-   * @param root0.Name - Area display name.
+   * @param data.ID - Area identifier.
+   * @param data.Name - Area display name.
    */
   public constructor({
     BuildingId: buildingId,

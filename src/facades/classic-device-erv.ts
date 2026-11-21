@@ -28,6 +28,14 @@ export class ClassicDeviceErvFacade extends BaseDeviceFacade<
     'OutdoorTemperature',
   ]
 
+  /**
+   * Charts the operation-mode breakdown, keeping the ventilation
+   * entries alone: `Power`, and each `Actual…` label that does not end
+   * in `OperationMode`. Labels and segments are filtered together, so
+   * their indices stay in step.
+   * @param query - Optional report time window.
+   * @returns The filtered pie chart options, or a typed failure.
+   */
   public override async getOperationModes(
     query?: ReportQuery,
   ): Promise<Result<ReportChartPieOptions>> {

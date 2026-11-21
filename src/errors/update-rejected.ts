@@ -42,7 +42,8 @@ export class UpdateRejectedError extends APIError {
  * Converts the Classic mutation wire union into the cross-dialect
  * throw-on-failure contract.
  * @param data - Wire outcome of a Classic mutation.
- * @throws UpdateRejectedError when the wire reports `Success: false`.
+ * @throws An {@link UpdateRejectedError} when the wire reports
+ * `Success: false`.
  */
 export const assertUpdateAccepted = (
   data: ClassicFailureData | ClassicSuccessData,
