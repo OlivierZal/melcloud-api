@@ -123,6 +123,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   explained with certainty, a real mode change only if MELCloud applies
   the unflagged fields of a body. Only the registry sync and a write's
   own echo may update a device model.
+- A `Result`-returning method never wears `@syncDevices()`: the
+  decorator fires once the method has resolved, and a `Result` resolves
+  on a failure too. `BaseDeviceFacade.getValues` announced a sync after
+  a failed read until 62.0.2 (reproduced by a test before the fix); it
+  notifies inline now, after the model update. The registry cycle holds
+  the same rule from the other side, by throwing: a failed refresh
+  never announces a completed sync, or a host would rewrite stale
+  values as if they were fresh.
 - The write that DOES re-impose a field is one whose caller names it.
   A form prefilled from the snapshot and applied later is the shape to
   watch: if a sync moves the snapshot between the prefill and the
@@ -294,6 +302,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   7.7 times less than `/EnergyCost/Report` where MELCloud's energy
   correction is active, and no lifetime figure (com.melcloud's
   CLAUDE.md, the cures weighed and left).
+- The grain of a Home energy CHART follows the span asked for, never
+  the time of day (62.0.2): hour buckets up to one day of window, day
+  buckets beyond, as the Classic report does (its wire answers hours
+  for a one-day report alone). The cutoff sat at a day and a half
+  until then, "halfway to the next whole-day option", which holds for
+  whole days counted back from now: com.melcloud anchors "N days" on
+  local midnight, so its "2 days" spans one to two days and charted
+  hours before noon, days after. The minute of margin left above one
+  day is for a rolling day, whose `from` the caller stamps a beat
+  before the library stamps `to`.
 - No instantaneous power exists anywhere on the Home API: not in
   `/context` settings (raw enumeration 2026-07-17: 11 ATA / 15 ATW
   names, none energy-bearing — no `CurrentEnergyConsumed/Produced`

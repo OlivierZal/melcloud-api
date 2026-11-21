@@ -6,8 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.0.2] - 2026-11-21
+
+### Fixed
+
+- **A Home energy chart keeps one grain for one span asked, at any time of day.** `getEnergyReport` charted hour buckets for a window up to a day and a half, a cutoff set "halfway to the next whole-day option" for windows counted back from now. A host that anchors "2 days" on local midnight asks for one to two days: that one choice charted hours before noon and days after. Hour buckets now go up to one day of window (a minute of margin for a rolling day, whose `from` is stamped a beat before `to`), day buckets beyond, as the Classic report does. Both Home device types.
+- **A failed `getValues()` on a Classic device facade announces no sync.** The read is `Result`-returning, so it resolves on a failure too, and the `syncDevices` decorator fired `onSyncComplete` once it had: a host re-read every device after a read that had changed nothing. The notification now follows a read that updated the model, and nothing else.
+
 ### Changed
 
+- `ClassicAPIAdapter` names the parameter of its seventeen function-typed members that destructured it (`options`): the published docs read `__namedParameters` in its place. The type is the same.
 - **Documentation only: the doc comments follow the tables of `@olivierzal/configs` 8.11.0.** Every public member of the Classic facades and of `ClassicAPI` carries a block of its own, where the class side had none; a destructured parameter is documented under a name (`options`, `data`, `filter`, `report`, `range`) where the published pages read `root0`; a `@throws` names the class it raises inside a sentence, and a documented generic names its type parameters. Two blocks now say what the code does: `ClassicAPI.updateValues` routes on `type`, not on a `DeviceType` of the body, and the sync a device facade's `fetch()` runs first is best-effort, so the data answered is that of the last sync that passed. The README's retry section named `GET` and three statuses: it lists what the client has retried since api-core 2.1.0 and 2.2.0, a 500 too, a failed connection or a request timeout, on any read, the Classic ones served over `POST` included. No behaviour, signature or export changes.
 
 ## [62.0.1] - 2026-11-21
@@ -1067,7 +1075,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.1...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.2...HEAD
+[62.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.1...v62.0.2
 [62.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...v62.0.1
 [62.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v61.0.0...v62.0.0
 [61.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.9.0...v61.0.0

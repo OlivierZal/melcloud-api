@@ -947,6 +947,26 @@ describe('home device ata facade', () => {
       expect(value.series[0]?.data[9]).toBeCloseTo(0.2)
     })
 
+    // The grain follows the span asked for, never the time of day. A
+    // host that anchors its "2 days" on local midnight asks for one to
+    // two days: with the cutoff at a day and a half, that one choice
+    // charted hours before noon and days after.
+    it.each([
+      { to: '2026-03-02T08:00:00Z', what: 'before noon' },
+      { to: '2026-03-02T14:00:00Z', what: 'after noon' },
+    ])(
+      'charts a window opened on the midnight before in days, $what',
+      async ({ to }) => {
+        const value = await chartEnergyReport(
+          { from: '2026-02-28T23:00:00Z', to },
+          [{ time: '2026-03-01 09:00:00.000000000', value: '200.0' }],
+          createMockHomeApi({ locale: 'fr-FR', timezone: 'Europe/Paris' }),
+        )
+
+        expect(value.labels).toStrictEqual(['1 mars', '2 mars'])
+      },
+    )
+
     it('charts a garbled energy as an idle bucket', async () => {
       const value = await chartEnergyReport(
         { from: '2026-03-01T00:00:00Z', to: '2026-03-02T00:00:00Z' },

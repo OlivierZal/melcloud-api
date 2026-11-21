@@ -1035,6 +1035,33 @@ describe('home device atw facade', () => {
       expect(value.series[1]?.data[7]).toBe(13.5)
     })
 
+    // The grain follows the span asked for, never the time of day: a
+    // window opened on the midnight before spans one to two days, and
+    // charts the unit's day buckets at any hour.
+    it.each([
+      { to: '2026-11-21T08:00:00Z', what: 'before noon' },
+      { to: '2026-11-21T14:00:00Z', what: 'after noon' },
+    ])(
+      'reads a window opened on the midnight before in day buckets, $what',
+      async ({ to }) => {
+        const api = createMockHomeApi({ locale: 'fr-FR', timezone: BRUSSELS })
+        vi.mocked(api.getAtwEnergy).mockResolvedValue(
+          ok([homeEnergyReport({})]),
+        )
+        const facade = new HomeDeviceAtwFacade(api, createModel())
+
+        const value = okValue(
+          await facade.getEnergyReport({ from: '2026-11-19T23:00:00Z', to }),
+        )
+
+        const requests = requestedPeriods(api).flat()
+
+        expect(requests).toContain('Monthly')
+        expect(requests).not.toContain('Daily')
+        expect(value.labels).toStrictEqual(['20 nov.', '21 nov.'])
+      },
+    )
+
     // An hour bucket of the unit starts on a half hour of the UTC clock
     // in Kolkata: the grid is built on the unit's own hours, so each
     // bucket charts under its own label.

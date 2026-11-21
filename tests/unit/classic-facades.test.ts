@@ -823,6 +823,11 @@ describe('ata device facade', () => {
     await facade.getValues()
 
     expect(api.getValues).toHaveBeenCalledWith(expect.any(Object))
+    // The read updated the model: the device's own sync is announced.
+    expect(api.notifySync).toHaveBeenCalledExactlyOnceWith({
+      ids: [1000],
+      type: undefined,
+    })
   })
 
   it('calls energy', async () => {
@@ -1182,8 +1187,11 @@ describe('ata device facade', () => {
     expect(api.getValues).not.toHaveBeenCalled()
   })
 
+  // A read that failed changed nothing, so it announces nothing: the
+  // registry cycle holds the same rule (a failed refresh never announces
+  // a completed sync), and a host re-reads every device on the signal.
   it('getValues propagates failure without touching the device model', async () => {
-    const { facade } = createAtaFacade({
+    const { api, facade } = createAtaFacade({
       getValues: vi
         .fn<ClassicAPIAdapter['getValues']>()
         .mockResolvedValue(
@@ -1194,6 +1202,7 @@ describe('ata device facade', () => {
 
     expect(result.ok).toBe(false)
     expect(!result.ok && result.error.kind).toBe('network')
+    expect(api.notifySync).not.toHaveBeenCalled()
   })
 
   it('updateValues throws when no data differs', async () => {

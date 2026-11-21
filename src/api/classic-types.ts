@@ -80,17 +80,13 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
    * @template T - Device type of the target, named by the caller to
    * narrow the payload type.
    */
-  readonly getEnergy: <T extends ClassicDeviceType>({
-    postData,
-  }: {
+  readonly getEnergy: <T extends ClassicDeviceType>(options: {
     postData: ClassicEnergyPostData
   }) => Promise<Result<ClassicEnergyData<T>>>
   /**
    * Fetch raw error log entries from the Classic API.
    */
-  readonly getErrorEntries: ({
-    postData,
-  }: {
+  readonly getErrorEntries: (options: {
     postData: ClassicErrorLogPostData
   }) => Promise<Result<ClassicErrorLogData[] | ClassicFailureData>>
   /**
@@ -104,73 +100,55 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
   /**
    * Get frost protection settings for a building, floor, area, or device.
    */
-  readonly getFrostProtection: ({
-    params,
-  }: {
+  readonly getFrostProtection: (options: {
     params: ClassicSettingsParams
   }) => Promise<Result<ClassicFrostProtectionData>>
   /**
    * Fetch ATA device group state. ATA only.
    */
-  readonly getGroup: ({
-    postData,
-  }: {
+  readonly getGroup: (options: {
     postData: ClassicGetGroupPostData
   }) => Promise<Result<ClassicGetGroupData>>
   /**
    * Get holiday mode settings for a building, floor, area, or device.
    */
-  readonly getHolidayMode: ({
-    params,
-  }: {
+  readonly getHolidayMode: (options: {
     params: ClassicSettingsParams
   }) => Promise<Result<ClassicHolidayModeData>>
   /**
    * Fetch hourly temperature report. ATW only.
    */
-  readonly getHourlyTemperatures: ({
-    postData,
-  }: {
+  readonly getHourlyTemperatures: (options: {
     postData: { device: number; hour: Hour }
   }) => Promise<Result<ClassicReportData>>
   /**
    * Fetch internal temperature report. ATW only.
    */
-  readonly getInternalTemperatures: ({
-    postData,
-  }: {
+  readonly getInternalTemperatures: (options: {
     postData: ClassicReportPostData
   }) => Promise<Result<ClassicReportData>>
   /**
    * Fetch operation mode log data for charting.
    */
-  readonly getOperationModes: ({
-    postData,
-  }: {
+  readonly getOperationModes: (options: {
     postData: ClassicReportPostData
   }) => Promise<Result<ClassicOperationModeLogData>>
   /**
    * Fetch WiFi signal strength report.
    */
-  readonly getSignal: ({
-    postData,
-  }: {
+  readonly getSignal: (options: {
     postData: { devices: number | number[]; hour: Hour }
   }) => Promise<Result<ClassicReportData>>
   /**
    * Fetch temperature log data.
    */
-  readonly getTemperatures: ({
-    postData,
-  }: {
+  readonly getTemperatures: (options: {
     postData: ClassicTemperatureLogPostData
   }) => Promise<Result<ClassicReportData>>
   /**
    * Fetch tile data for device overview.
    */
-  readonly getTiles: ({
-    postData,
-  }: {
+  readonly getTiles: (options: {
     postData: ClassicTilesPostData
   }) => Promise<Result<ClassicTilesData>>
   /**
@@ -178,41 +156,31 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
    * @template T - Device type of the target, named by the caller to
    * narrow the payload type.
    */
-  readonly getValues: <T extends ClassicDeviceType>({
-    params,
-  }: {
+  readonly getValues: <T extends ClassicDeviceType>(options: {
     params: ClassicGetDeviceDataParams
   }) => Promise<Result<ClassicGetDeviceData<T>>>
   /**
    * Update frost protection settings.
    */
-  readonly updateFrostProtection: ({
-    postData,
-  }: {
+  readonly updateFrostProtection: (options: {
     postData: ClassicFrostProtectionPostData
   }) => Promise<ClassicFailureData | ClassicSuccessData>
   /**
    * Update ATA device group state. ATA only.
    */
-  readonly updateGroupState: ({
-    postData,
-  }: {
+  readonly updateGroupState: (options: {
     postData: ClassicSetGroupPostData
   }) => Promise<ClassicFailureData | ClassicSuccessData>
   /**
    * Update holiday mode settings.
    */
-  readonly updateHolidayMode: ({
-    postData,
-  }: {
+  readonly updateHolidayMode: (options: {
     postData: ClassicHolidayModePostData
   }) => Promise<ClassicFailureData | ClassicSuccessData>
   /**
    * Turn devices on or off.
    */
-  readonly updatePower: ({
-    postData,
-  }: {
+  readonly updatePower: (options: {
     postData: ClassicSetPowerPostData
   }) => Promise<boolean>
   /**
@@ -220,10 +188,7 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
    * @template T - Device type of the target: it selects the endpoint
    * and the shapes of the body and of the answer.
    */
-  readonly updateValues: <T extends ClassicDeviceType>({
-    postData,
-    type,
-  }: {
+  readonly updateValues: <T extends ClassicDeviceType>(options: {
     postData: ClassicSetDevicePostData<T>
     type: T
   }) => Promise<ClassicSetDeviceData<T>>
