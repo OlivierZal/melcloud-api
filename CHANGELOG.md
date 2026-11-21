@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.0.1] - 2026-11-21
+
+### Fixed
+
+- **The temperature charts of a MELCloud Home unit are read on the unit's own clock.** The three temperature reports (`trendsummary`, `comfort-graph`, `internaltemperatures`) stamp their samples and their operation-mode bands on the unit's wall clock, and read a zoneless bound on that clock too (live-probed 2026-11-21: the same window asked with its bounds as instants answered an hour more of samples for a UTC+1 unit, stamped later than "now in UTC"). The SDK sent zoneless UTC bounds and read every stamp as UTC, so for a unit outside UTC `getTemperatures`, `getHourlyTemperatures`, `getInternalTemperatures` and `getOperationModes` missed the newest hours of their window, an hour in a UTC+1 winter and two in a UTC+2 summer, and charted the rest later by as much. The bounds are sent as instants now, and the stamps are read on the unit's `/context` `timeZone` (#1859). `HomeAPI.getTemperatures` and `getAtwInternalTemperatures` send their bounds the same way: a zoneless one is UTC wall clock, as documented, where the wire took it for the unit's.
+- On a Home device facade, a temperature or operation-mode chart of an id the registry no longer holds answers `not-found` without a request, like the energy reads.
+
+### Changed
+
+- api-core 2.4.2: the transient-retry line names what failed (`Transient failure on <url> (<cause chain>): retry 1 in 1041 ms`) and prints its delay in whole milliseconds.
+
 ## [62.0.0] - 2026-11-21
 
 ### Fixed
@@ -1053,6 +1064,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
 [Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...HEAD
+[62.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...v62.0.1
 [62.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v61.0.0...v62.0.0
 [61.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.9.0...v61.0.0
 [60.9.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.8.0...v60.9.0

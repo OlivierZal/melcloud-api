@@ -807,8 +807,12 @@ describe('home device atw facade', () => {
       reportPeriod: 'hourly',
     }
 
+    // The reports stamp their samples and bands on the unit's own
+    // clock. Over the unit's day, on a display clock in its zone, the
+    // band stamped 01:00 to 03:00 charts from 01:00 to 03:00; read as
+    // UTC it would sit two hours late in the Brussels summer.
     it('merges comfort and internal series with mode bands', async () => {
-      const api = createMockHomeApi()
+      const api = createMockHomeApi({ timezone: BRUSSELS })
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(
         ok([internalReport]),
@@ -817,15 +821,15 @@ describe('home device atw facade', () => {
 
       const value = okValue(
         await facade.getTemperatures({
-          from: '2026-05-09T00:00:00Z',
-          to: '2026-05-10T00:00:00Z',
+          from: '2026-05-08T22:00:00Z',
+          to: '2026-05-09T22:00:00Z',
         }),
       )
 
       const params = {
-        from: '2026-05-09T00:00:00Z',
+        from: '2026-05-08T22:00:00Z',
         period: 'Hourly',
-        to: '2026-05-10T00:00:00Z',
+        to: '2026-05-09T22:00:00Z',
       }
 
       expect(api.getTemperatures).toHaveBeenCalledWith('atw-1', params)
@@ -987,9 +991,11 @@ describe('home device atw facade', () => {
 
       expect(value.labels[0]).toBe('Stop')
       expect(value.labels[1]).toBe('HotWater')
-      // 2 hours of hot water out of 24; the rest idles as Stop.
-      expect(value.series[1]).toBeCloseTo(2 / 24)
-      expect(value.series[0]).toBeCloseTo(22 / 24)
+      // The band runs from 01:00 to 03:00 on the unit's clock, 23:00 to
+      // 01:00 UTC in the Brussels summer: one of its two hours falls in
+      // this UTC day, and the rest idles as Stop.
+      expect(value.series[1]).toBeCloseTo(1 / 24)
+      expect(value.series[0]).toBeCloseTo(23 / 24)
     })
   })
 

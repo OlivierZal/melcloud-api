@@ -261,9 +261,10 @@ export const fetchHomeReportChunks = async (
     mergeHomeReportChunks,
   )
 
-// The Home wire speaks UTC wall-clock on queries and samples alike
-// (live-probed 2026-07-18: the freshest sample equals "now" in UTC).
-const WIRE_TIME_ZONE = 'UTC'
+// The telemetry endpoints stamp their samples on the UTC wall clock;
+// the report endpoints stamp theirs on the unit's own (live-probed
+// 2026-11-21), so every report reader below takes the unit's zone.
+const TELEMETRY_TIME_ZONE = 'UTC'
 
 // Hourly grids up to this span; daily grids beyond (169 points max).
 const MAX_HOURLY_GRID_DAYS = 7
@@ -337,8 +338,8 @@ export const toHomeSeriesName = (id: string): string =>
 const parseWireDateTime = (value: string): Temporal.PlainDateTime =>
   Temporal.PlainDateTime.from(value.replace(' ', 'T'))
 
-const toEpochMilliseconds = (value: string): number =>
-  parseWireDateTime(value).toZonedDateTime(WIRE_TIME_ZONE).epochMilliseconds
+const toEpochMilliseconds = (value: string, zone: string): number =>
+  parseWireDateTime(value).toZonedDateTime(zone).epochMilliseconds
 
 // Query dates carrying an offset (`Z`, `+02:00`) pin an absolute
 // instant; zoneless dates are wall-clock in the display timezone —
@@ -519,9 +520,12 @@ const formatGridLabels = ({
 
 type SamplePoint = readonly [epochMilliseconds: number, value: number]
 
-const toSamplePoints = (points: readonly HomeReportPoint[]): SamplePoint[] =>
+const toSamplePoints = (
+  points: readonly HomeReportPoint[],
+  zone: string,
+): SamplePoint[] =>
   points
-    .map((point): SamplePoint => [toEpochMilliseconds(point.x), point.y])
+    .map((point): SamplePoint => [toEpochMilliseconds(point.x, zone), point.y])
     .toSorted(([first], [second]) => first - second)
 
 // Last-observation-carried-forward: each grid slot takes the freshest
@@ -623,7 +627,7 @@ const floorGridIndex = (
 const toBands = (
   reports: readonly HomeReportData[],
   grid: readonly Temporal.ZonedDateTime[],
-  window: HomeChartWindow,
+  { window, zone }: { window: HomeChartWindow; zone: string },
 ): ReportChartBand[] => {
   const fromMs = window.from.epochMilliseconds
   const toMs = window.to.epochMilliseconds
@@ -631,8 +635,8 @@ const toBands = (
     .flatMap((report) => report.annotations ?? [])
     .filter(hasModeLabel)
     .flatMap((annotation) => {
-      const min = toEpochMilliseconds(annotation.xMin)
-      const max = toEpochMilliseconds(annotation.xMax)
+      const min = toEpochMilliseconds(annotation.xMin, zone)
+      const max = toEpochMilliseconds(annotation.xMax, zone)
       if (max < fromMs || min > toMs) {
         return []
       }
@@ -657,6 +661,8 @@ const toBands = (
  * @param options.reports - Report payloads (one or more endpoints).
  * @param options.unit - Measurement unit label (e.g. `'°C'`).
  * @param options.window - Resolved chart window (in the display timezone).
+ * @param options.zone - IANA timezone of the unit, the clock the
+ * report stamps are read on.
  * @returns Structured line chart options.
  */
 export const toHomeLineOptions = ({
@@ -666,17 +672,19 @@ export const toHomeLineOptions = ({
   reports,
   unit,
   window,
+  zone,
 }: {
   reports: readonly HomeReportData[]
   unit: string
   window: HomeChartWindow
+  zone: string
   cutoff?: Temporal.ZonedDateTime | undefined
   gridUnit?: HomeChartGridUnit | undefined
   locale?: string | undefined
 }): ReportChartLineOptions => {
   const resolvedUnit = gridUnit ?? chooseGridUnit(window)
   const grid = buildGrid(window, resolvedUnit)
-  const bands = toBands(reports, grid, window)
+  const bands = toBands(reports, grid, { window, zone })
   return {
     ...(bands.length > 0 && { bands }),
     from: window.from.toPlainDateTime().toString(),
@@ -685,7 +693,7 @@ export const toHomeLineOptions = ({
       .filter(({ points }) => points.length > 0)
       .map(({ id, points }) => ({
         data: resampleSeries(
-          toSamplePoints(points),
+          toSamplePoints(points, zone),
           grid,
           cutoff?.epochMilliseconds,
         ),
@@ -700,7 +708,7 @@ export const toHomeLineOptions = ({
 // in fractional days.
 const sumModeDurations = (
   reports: readonly HomeReportData[],
-  window: HomeChartWindow,
+  { window, zone }: { window: HomeChartWindow; zone: string },
 ): Map<string, number> => {
   const durations = new Map<string, number>()
   const modeAnnotations = reports
@@ -708,11 +716,11 @@ const sumModeDurations = (
     .filter(hasModeLabel)
   for (const annotation of modeAnnotations) {
     const min = Math.max(
-      toEpochMilliseconds(annotation.xMin),
+      toEpochMilliseconds(annotation.xMin, zone),
       window.from.epochMilliseconds,
     )
     const max = Math.min(
-      toEpochMilliseconds(annotation.xMax),
+      toEpochMilliseconds(annotation.xMax, zone),
       window.to.epochMilliseconds,
     )
     if (max <= min) {
@@ -729,14 +737,17 @@ const sumModeDurations = (
  * Classic-shaped pie chart options: one slice per mode, values in
  * fractional days over the window, idle remainder as `Stop`.
  * @param reports - Comfort-graph payloads.
- * @param window - Resolved chart window.
+ * @param clocks - Where the report is read.
+ * @param clocks.window - Resolved chart window.
+ * @param clocks.zone - IANA timezone of the unit, the clock the
+ * annotation stamps are read on.
  * @returns Structured pie chart options.
  */
 export const toHomeOperationModeOptions = (
   reports: readonly HomeReportData[],
-  window: HomeChartWindow,
+  { window, zone }: { window: HomeChartWindow; zone: string },
 ): ReportChartPieOptions => {
-  const durations = sumModeDurations(reports, window)
+  const durations = sumModeDurations(reports, { window, zone })
   const windowDays =
     (window.to.epochMilliseconds - window.from.epochMilliseconds) / MS_PER_DAY
   const active = durations.values().reduce((sum, value) => sum + value, 0)
@@ -785,7 +796,7 @@ export const toHomeSignalOptions = ({
   const samples = data.measureData
     .flatMap((measure) => measure.values)
     .map((point): SamplePoint => [
-      toEpochMilliseconds(point.time),
+      toEpochMilliseconds(point.time, TELEMETRY_TIME_ZONE),
       Number(point.value),
     ])
     .toSorted(([first], [second]) => first - second)

@@ -319,11 +319,20 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   as instants, a UTC+1 unit answers an hour more of samples, stamped
   later than "now in UTC" (449 points against 398 on `trendsummary`,
   the two other reports alike). `combined-energy` is read on the
-  unit's clock (62.0.0). The three temperature reports are NOT yet:
-  `#fetchReport` sends zoneless UTC bounds and `home-report.ts` reads
-  their stamps as UTC (`WIRE_TIME_ZONE`), so for a unit outside UTC
-  every Home temperature chart misses its newest hours and shows the
-  rest shifted by the unit's offset (#1859).
+  unit's clock since 62.0.0, the three temperature reports since
+  62.0.1 (#1859): until then `#fetchReport` sent zoneless UTC bounds
+  and `home-report.ts` read every stamp as UTC, so for a unit outside
+  UTC every Home temperature chart, band and operation-mode pie missed
+  its newest hours and showed the rest shifted by the unit's offset.
+  Every report read goes through the base facade's `onUnitClock`,
+  which hands it the unit's `timeZone` and answers `not-found` for an
+  id the registry no longer holds. NOT MEASURED APART, and still read
+  as UTC on the 2026-07-18 note alone: the `/monitor/*/errorlog`
+  stamps, and the `/context` holiday-mode bounds, where a stored
+  window echoes whatever was sent, so a round trip says nothing of the
+  clock that ARMS it. An error entry or a holiday window off by the
+  unit's offset would be this, and telling needs an event whose time
+  is known, or a write.
   `HomeAPIConfig.timezone` anchors chart label rendering and day/hour
   windows in the facades, and nothing on the wire.
 - Home report semantics (comfort-graph / internaltemperatures /

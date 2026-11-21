@@ -147,9 +147,10 @@ export interface HomeAPIConfig extends BaseAPIConfig {
   readonly locale?: string | undefined
   /**
    * IANA timezone identifier (e.g. `'Europe/Paris'`) used to render
-   * chart labels and resolve day/hour windows. The Home wire speaks
-   * UTC wall-clock (live-probed 2026-07-18); this timezone only
-   * affects local presentation. Defaults to UTC when unset.
+   * chart labels and resolve day/hour windows. Nothing on the wire is
+   * read with it, each endpoint family having a clock of its own; this
+   * timezone only affects local presentation. Defaults to UTC when
+   * unset.
    */
   readonly timezone?: string | undefined
 }

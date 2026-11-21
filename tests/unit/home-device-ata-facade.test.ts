@@ -841,6 +841,24 @@ describe('home device ata facade', () => {
       expect(value.unit).toBe('°C')
       expect(value.labels).toHaveLength(25)
       expect(value.series[0]?.name).toBe('RoomTemperature')
+      // The report stamps its samples on the unit's own clock: 01:00 in
+      // Paris is 00:00 UTC, the first slot of this UTC day. Read as UTC
+      // it would chart an hour late.
+      expect(value.series[0]?.data.slice(0, 2)).toStrictEqual([21, 21])
+    })
+
+    // The unit's zone lives on its registry model: an id the registry
+    // dropped has no clock to read the report on.
+    it('answers not-found for a report of an id the registry no longer holds', async () => {
+      const api = createMockHomeApi()
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+      pruneHomeDevice('device-1')
+
+      await expect(facade.getTemperatures()).resolves.toStrictEqual({
+        error: { entityId: 'device-1', kind: 'not-found' },
+        ok: false,
+      })
+      expect(api.getTemperatures).not.toHaveBeenCalled()
     })
 
     it('propagates a trend-summary failure untouched', async () => {
