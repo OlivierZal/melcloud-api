@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "62.0.0",
+  "version": "62.0.1",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -91,7 +91,7 @@
   },
   "prettier": "@olivierzal/configs/prettier",
   "dependencies": {
-    "@olivierzal/api-core": "2.4.1",
+    "@olivierzal/api-core": "2.4.2",
     "tough-cookie": "^6.0.2",
     "zod": "^4.4.3"
   },

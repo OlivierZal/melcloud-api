@@ -72,6 +72,7 @@ export interface HomeDeviceDataOverrides {
   readonly overheatProtection?: HomeOverheatProtection | null
   readonly rssi?: number
   readonly settings?: Record<string, string>
+  readonly timeZone?: string
 }
 
 // Defaults land by spread rather than by one `??` per field: the override
@@ -90,6 +91,7 @@ const HOME_ATA_DEFAULTS: Required<
   overheatProtection: null,
   rssi: DEFAULT_RSSI_DBM,
   settings: {},
+  timeZone: 'Europe/Paris',
 }
 
 const homeDeviceData = (
@@ -106,6 +108,7 @@ const homeDeviceData = (
     overheatProtection,
     rssi,
     settings,
+    timeZone,
   } = { ...HOME_ATA_DEFAULTS, ...overrides }
   return mock<HomeAtaDeviceData>({
     capabilities: { ...defaultHomeAtaCapabilities, ...capabilities },
@@ -118,6 +121,7 @@ const homeDeviceData = (
     overheatProtection,
     rssi,
     settings: buildSettings(settings),
+    timeZone,
   })
 }
 

@@ -998,12 +998,14 @@ describe('melcloud home API', () => {
       })
 
       expect(result).toStrictEqual({ ok: true, value: mockReportData })
+      // Instants, the `Z` included: a zoneless bound is read on the
+      // unit's own clock, and the newest hours are never asked for.
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
-            from: '2026-03-01T00:00:00.0000000',
+            from: '2026-03-01T00:00:00.0000000Z',
             period: 'Hourly',
-            to: '2026-03-02T00:00:00.0000000',
+            to: '2026-03-02T00:00:00.0000000Z',
             unitId: 'device-1',
           },
           url: '/report/v1/trendsummary',
@@ -1303,7 +1305,7 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('getTemperatures hits /report/v1/comfort-graph with .NET-format dates', async () => {
+    it('getTemperatures hits /report/v1/comfort-graph with .NET-format instants', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
@@ -1319,9 +1321,9 @@ describe('melcloud home API', () => {
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
-            from: '2026-05-01T00:00:00.0000000',
+            from: '2026-05-01T00:00:00.0000000Z',
             period: 'Daily',
-            to: '2026-05-02T00:00:00.0000000',
+            to: '2026-05-02T00:00:00.0000000Z',
             unitId: 'atw-1',
           },
           url: '/report/v1/comfort-graph',

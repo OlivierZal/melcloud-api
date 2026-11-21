@@ -12,9 +12,9 @@ import {
   type HomeAtwDeviceCapabilities,
   type HomeAtwDeviceData,
   type HomeAtwValues,
+  type HomeReportData,
   type Hour,
   type Result,
-  err,
   mapResult,
   ok,
 } from '../types/index.ts'
@@ -337,7 +337,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   public async getEnergyReport(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
-    return this.#onUnitClock(async (zone) =>
+    return this.onUnitClock(async (zone) =>
       getHomeAtwEnergyReport(this.api, this.id, {
         window: resolveHomeReportWindow(query, this.chartTimezone),
         zone,
@@ -359,7 +359,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   public async getEnergySeries(
     query: HomeEnergySeriesQuery,
   ): Promise<Result<HomeAtwEnergySeries>> {
-    return this.#onUnitClock(async (zone) =>
+    return this.onUnitClock(async (zone) =>
       getHomeAtwEnergySeries(this.api, this.id, { query, zone }),
     )
   }
@@ -377,11 +377,9 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    const { cutoff, gridUnit, window } = resolveHomeFineWindow(
-      hour,
-      this.chartTimezone,
+    return this.#fetchTemperatureChart(
+      resolveHomeFineWindow(hour, this.chartTimezone),
     )
-    return this.#fetchTemperatureChart(window, gridUnit, cutoff)
   }
 
   /**
@@ -412,20 +410,15 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     query?: ReportQuery,
   ): Promise<Result<ReportChartPieOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
-    return mapResult(
-      await fetchHomeReportChunks(
-        async (params) =>
-          mapResult(
-            await this.api.getTemperatures(this.id, params),
-            // The pie only reads the annotations: drop each chunk's
-            // minute-grained sample payload before the merge piles
-            // them up on the host's constrained heap.
-            (reports) => reports.map((report) => ({ ...report, datasets: [] })),
-          ),
-        window,
-        MAX_ANNOTATION_CHUNK_DAYS,
+    return this.onUnitClock(async (zone) =>
+      mapResult(
+        await fetchHomeReportChunks(
+          async (params) => this.#fetchAnnotations(params),
+          window,
+          MAX_ANNOTATION_CHUNK_DAYS,
+        ),
+        (reports) => toHomeOperationModeOptions(reports, { window, zone }),
       ),
-      (reports) => toHomeOperationModeOptions(reports, window),
     )
   }
 
@@ -442,9 +435,9 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   public async getTemperatures(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
-    return this.#fetchTemperatureChart(
-      resolveHomeReportWindow(query, this.chartTimezone),
-    )
+    return this.#fetchTemperatureChart({
+      window: resolveHomeReportWindow(query, this.chartTimezone),
+    })
   }
 
   /**
@@ -485,6 +478,20 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     }
   }
 
+  // The pie only reads the annotations: each chunk's minute-grained
+  // sample payload is dropped before the merge piles them up on the
+  // host's constrained heap.
+  async #fetchAnnotations(params: {
+    from: string
+    period: string
+    to: string
+  }): Promise<Result<HomeReportData[]>> {
+    return mapResult(
+      await this.api.getTemperatures(this.id, params),
+      (reports) => reports.map((report) => ({ ...report, datasets: [] })),
+    )
+  }
+
   // Shared pipeline of `getTemperatures` and `getHourlyTemperatures`:
   // both merge the comfort-graph (room/set/outside + mode annotations)
   // with the internal-temperatures report (flow/return/tank), only the
@@ -493,53 +500,48 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   // the band window (the hourly grid) the annotations are dropped —
   // a daily grid inflates them into a solid wall, and the Weekly wire
   // truncates them anyway.
-  async #fetchTemperatureChart(
-    window: HomeChartWindow,
-    gridUnit?: HomeChartGridUnit,
-    cutoff?: Temporal.ZonedDateTime,
-  ): Promise<Result<ReportChartLineOptions>> {
-    const shouldChartBands = shouldChartHomeBands(window)
-    const [comfort, internal] = await Promise.all([
-      fetchHomeReportChunks(
-        async (params) => this.api.getTemperatures(this.id, params),
-        window,
-      ),
-      fetchHomeReportChunks(
-        async (params) => this.api.getAtwInternalTemperatures(this.id, params),
-        window,
-      ),
-    ])
-    if (!comfort.ok) {
-      return comfort
-    }
-    if (!internal.ok) {
-      return internal
-    }
-    const reports = [...comfort.value, ...internal.value]
-    return ok(
-      toHomeLineOptions({
-        ...(gridUnit !== undefined && { gridUnit }),
-        cutoff,
-        locale: this.api.locale,
-        reports: shouldChartBands
-          ? reports
-          : reports.map((report) => ({ ...report, annotations: [] })),
-        unit: TEMPERATURE_UNIT,
-        window,
-      }),
-    )
-  }
-
-  // The combined-energy report speaks the unit's own clock, which only
-  // the registry's model tells. A read of it answers `not-found` for an
-  // id the registry no longer holds, like the reads the API client
-  // routes on the registry, where an accessor throws.
-  async #onUnitClock<T>(
-    read: (zone: string) => Promise<Result<T>>,
-  ): Promise<Result<T>> {
-    return this.exists
-      ? read(this.model.data.timeZone)
-      : err({ entityId: this.id, kind: 'not-found' })
+  async #fetchTemperatureChart({
+    cutoff,
+    gridUnit,
+    window,
+  }: {
+    window: HomeChartWindow
+    cutoff?: Temporal.ZonedDateTime | undefined
+    gridUnit?: HomeChartGridUnit | undefined
+  }): Promise<Result<ReportChartLineOptions>> {
+    return this.onUnitClock(async (zone) => {
+      const [comfort, internal] = await Promise.all([
+        fetchHomeReportChunks(
+          async (params) => this.api.getTemperatures(this.id, params),
+          window,
+        ),
+        fetchHomeReportChunks(
+          async (params) =>
+            this.api.getAtwInternalTemperatures(this.id, params),
+          window,
+        ),
+      ])
+      if (!comfort.ok) {
+        return comfort
+      }
+      if (!internal.ok) {
+        return internal
+      }
+      const reports = [...comfort.value, ...internal.value]
+      return ok(
+        toHomeLineOptions({
+          ...(gridUnit !== undefined && { gridUnit }),
+          cutoff,
+          locale: this.api.locale,
+          reports: shouldChartHomeBands(window)
+            ? reports
+            : reports.map((report) => ({ ...report, annotations: [] })),
+          unit: TEMPERATURE_UNIT,
+          window,
+          zone,
+        }),
+      )
+    })
   }
 
   // Zone-2 accessors share the single-zone null: the capability flag is

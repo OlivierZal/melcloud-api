@@ -321,6 +321,7 @@ describe.concurrent(toHomeLineOptions, () => {
       ],
       unit: '°C',
       window: utcDayWindow,
+      zone: 'UTC',
     })
 
     expect(options.unit).toBe('°C')
@@ -334,6 +335,39 @@ describe.concurrent(toHomeLineOptions, () => {
     expect(series?.data.at(-1)).toBe(21.5)
   })
 
+  // A report stamps its samples and its bands on the unit's own clock
+  // (live-probed 2026-11-21): in the Paris summer the 02:30 sample is
+  // of 00:30 UTC, and the band from 04:00 to 06:00 runs from 02:00 to
+  // 04:00 UTC.
+  it('reads the stamps on the clock of the unit', () => {
+    const options = toHomeLineOptions({
+      reports: [
+        report({
+          annotations: [
+            {
+              label: `${OVERLAY_PREFIX}HEATING`,
+              xMax: '2026-07-17T06:00:00',
+              xMin: '2026-07-17T04:00:00',
+            },
+          ],
+          datasets: [
+            {
+              data: [homeReportPoint('2026-07-17T02:30:00', 20)],
+              id: 'room_temperature',
+              label: 'ignored',
+            },
+          ],
+        }),
+      ],
+      unit: '°C',
+      window: utcDayWindow,
+      zone: PARIS,
+    })
+
+    expect(options.series[0]?.data.slice(0, 2)).toStrictEqual([null, 20])
+    expect(options.bands).toStrictEqual([{ from: 2, label: 'Heating', to: 4 }])
+  })
+
   it('switches to a daily grid beyond seven days', () => {
     const window = resolveHomeReportWindow(
       { from: '2026-07-01T00:00:00', to: '2026-07-18T00:00:00' },
@@ -343,6 +377,7 @@ describe.concurrent(toHomeLineOptions, () => {
       reports: [report()],
       unit: '°C',
       window,
+      zone: 'UTC',
     })
 
     expect(options.labels).toHaveLength(18)
@@ -358,6 +393,7 @@ describe.concurrent(toHomeLineOptions, () => {
       reports: [report()],
       unit: '°C',
       window,
+      zone: 'UTC',
     })
 
     expect(options.labels).toHaveLength(61)
@@ -383,6 +419,7 @@ describe.concurrent(toHomeLineOptions, () => {
       ],
       unit: '°C',
       window: utcDayWindow,
+      zone: 'UTC',
     })
 
     expect(options.series).toHaveLength(1)
@@ -413,6 +450,7 @@ describe.concurrent(toHomeLineOptions, () => {
       ],
       unit: '°C',
       window: utcDayWindow,
+      zone: 'UTC',
     })
 
     expect(options.series).toHaveLength(1)
@@ -428,6 +466,7 @@ describe.concurrent(toHomeLineOptions, () => {
       ],
       unit: '°C',
       window: utcDayWindow,
+      zone: 'UTC',
     })
 
     expect(options.series).toHaveLength(0)
@@ -460,6 +499,7 @@ describe.concurrent(toHomeLineOptions, () => {
       ],
       unit: '°C',
       window: utcDayWindow,
+      zone: 'UTC',
     })
 
     const [series] = options.series
@@ -499,6 +539,7 @@ describe.concurrent(toHomeLineOptions, () => {
       ],
       unit: '°C',
       window: utcDayWindow,
+      zone: 'UTC',
     })
 
     expect(options.bands).toStrictEqual([{ from: 1, label: 'HotWater', to: 3 }])
@@ -509,6 +550,7 @@ describe.concurrent(toHomeLineOptions, () => {
       reports: [report()],
       unit: '°C',
       window: utcDayWindow,
+      zone: 'UTC',
     })
 
     expect(options.bands).toBeUndefined()
@@ -523,6 +565,7 @@ describe.concurrent(toHomeLineOptions, () => {
         { from: '2026-07-16T00:00:00', to: '2026-07-18T00:00:00' },
         'UTC',
       ),
+      zone: 'UTC',
     })
 
     expect(options.labels[0]).toBe('16 juil., 00:00')
@@ -530,6 +573,30 @@ describe.concurrent(toHomeLineOptions, () => {
 })
 
 describe.concurrent(toHomeOperationModeOptions, () => {
+  // A band of three hours on a unit of the Paris summer, two hours
+  // ahead of UTC: it opens at 23:00 UTC the day before, and two of its
+  // hours fall in the window.
+  it('reads the annotation stamps on the clock of the unit', () => {
+    const options = toHomeOperationModeOptions(
+      [
+        report({
+          annotations: [
+            {
+              label: `${OVERLAY_PREFIX}HOT_WATER`,
+              xMax: '2026-07-17T04:00:00',
+              xMin: '2026-07-17T01:00:00',
+            },
+          ],
+        }),
+      ],
+      { window: utcDayWindow, zone: PARIS },
+    )
+
+    expect(options.series[options.labels.indexOf('HotWater')]).toBeCloseTo(
+      2 / 24,
+    )
+  })
+
   it('sums clipped mode durations and fills the idle remainder', () => {
     const options = toHomeOperationModeOptions(
       [
@@ -549,7 +616,7 @@ describe.concurrent(toHomeOperationModeOptions, () => {
           ],
         }),
       ],
-      utcDayWindow,
+      { window: utcDayWindow, zone: 'UTC' },
     )
 
     expect(options.labels).toStrictEqual([
@@ -582,7 +649,7 @@ describe.concurrent(toHomeOperationModeOptions, () => {
           ],
         }),
       ],
-      utcDayWindow,
+      { window: utcDayWindow, zone: 'UTC' },
     )
 
     // 1h + 2h of cooling out of 24.
@@ -604,7 +671,7 @@ describe.concurrent(toHomeOperationModeOptions, () => {
           ],
         }),
       ],
-      utcDayWindow,
+      { window: utcDayWindow, zone: 'UTC' },
     )
 
     expect(options.series[0]).toBeCloseTo(1)
@@ -624,7 +691,7 @@ describe.concurrent(toHomeOperationModeOptions, () => {
           ],
         }),
       ],
-      utcDayWindow,
+      { window: utcDayWindow, zone: 'UTC' },
     )
 
     expect(options.labels.at(-1)).toBe('FrostProtection')

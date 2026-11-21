@@ -23,7 +23,7 @@ export interface ErrorLogEntry {
   /**
    * The instant of {@link at} normalized to epoch milliseconds — each
    * dialect anchors its own wall-clock discipline at its boundary. Home
-   * `at` is UTC wall clock, so its instant is exact. Classic `at` is
+   * `at` is read as UTC wall clock. Classic `at` is
    * BUILDING-local wall clock anchored in the client's configured
    * timezone (`ClassicAPIConfig.timezone`, the host's zone when unset):
    * exact only insofar as that timezone is the building's — a building

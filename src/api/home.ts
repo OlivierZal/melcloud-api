@@ -212,19 +212,17 @@ const parseUTCPlainDateTime = (iso: string): Temporal.PlainDateTime =>
     offset: 'use',
   }).toPlainDateTime()
 
-// `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
-// (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
-// truncated to an empty window by the BFF.
-const toReportDate = (iso: string): string =>
-  parseUTCPlainDateTime(iso)
+// The `/report/v1/*` endpoints expect .NET-style ISO with 7 subsecond
+// zeros (e.g. `2026-04-19T00:00:00.0000000Z`): anything shorter is
+// silently truncated to an empty window by the BFF. They read a
+// zoneless bound as the unit's OWN wall clock (live-probed 2026-11-21,
+// on the energy report and on the three temperature ones: a zoneless
+// UTC bound came back shifted by the unit's offset, its newest hours
+// never asked for). The trailing `Z` pins the instant.
+const toReportInstant = (iso: string): string =>
+  `${parseUTCPlainDateTime(iso)
     .round({ roundingMode: 'trunc', smallestUnit: 'second' })
-    .toString({ fractionalSecondDigits: 7 })
-
-// `/report/v1/combined-energy` reads a zoneless bound as the unit's OWN
-// wall clock, where the three reports above read UTC (live-probed
-// 2026-11-21: a zoneless UTC day came back shifted by the unit's
-// offset). The trailing `Z` pins the instant.
-const toReportInstant = (iso: string): string => `${toReportDate(iso)}Z`
+    .toString({ fractionalSecondDigits: 7 })}Z`
 
 // `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
 // space and no seconds. Seconds or an ISO `T` separator produce an empty
@@ -278,9 +276,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   /**
    * IANA timezone supplied via {@link HomeAPIConfig.timezone},
-   * or `undefined` to fall back to UTC. The Home wire itself speaks
-   * UTC wall-clock; this timezone only anchors chart windows and
-   * label rendering in the device facades.
+   * or `undefined` to fall back to UTC. Nothing on the wire is read
+   * with it, each endpoint family having a clock of its own; this
+   * timezone only anchors chart windows and label rendering in the
+   * device facades.
    * @returns The configured IANA timezone identifier, or `undefined`.
    */
   public get timezone(): string | undefined {
@@ -929,9 +928,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   ): Promise<Result<HomeReportData[]>> {
     return this.safeRequest('get', path, {
       params: {
-        from: toReportDate(params.from),
+        from: toReportInstant(params.from),
         period: params.period,
-        to: toReportDate(params.to),
+        to: toReportInstant(params.to),
         unitId: id,
       },
       schema: HomeReportDataSchema.array(),

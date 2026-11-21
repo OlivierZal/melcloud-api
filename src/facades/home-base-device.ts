@@ -22,6 +22,7 @@ import {
   type HomeReportData,
   type Hour,
   type Result,
+  err,
   mapResult,
   ok,
 } from '../types/index.ts'
@@ -70,9 +71,9 @@ export const toHomeProtectionState = (
 
 /**
  * Maps a Home `/context` holiday descriptor onto the cross-dialect read
- * state; `null` (never configured) passes through. The Home wire speaks
- * UTC wall clock everywhere (live-probed; see CLAUDE.md): both bounds
- * come back projected onto the caller's clock.
+ * state; `null` (never configured) passes through. The bounds are read
+ * as UTC wall clock (CLAUDE.md, the two-clocks entry, says what that
+ * rests on) and come back projected onto the caller's clock.
  * @param holidayMode - Wire descriptor, or `null`.
  * @param timeZone - The caller's IANA timezone; host zone when omitted.
  * @returns The neutral holiday-mode state, or `null`.
@@ -260,7 +261,8 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
 
   /**
    * IANA timezone anchoring chart windows and labels, from the API
-   * configuration; the Home wire itself always speaks UTC wall-clock.
+   * configuration; nothing on the wire is read with it, each endpoint
+   * family having a clock of its own.
    * @returns The display timezone, UTC when unconfigured.
    */
   protected get chartTimezone(): string {
@@ -340,8 +342,9 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
           timestamp,
         }): ErrorLogEntry => ({
           at: timestamp,
-          // The Home wire speaks UTC wall clock everywhere (see
-          // CLAUDE.md, live-probed): both instants anchor in UTC.
+          // The error log is read as UTC wall clock (CLAUDE.md, the
+          // two-clocks entry, says what that rests on): both instants
+          // anchor in UTC.
           atEpochMs: toEpochMs(timestamp, 'UTC'),
           code: errorCode,
           deviceId: this.id,
@@ -514,16 +517,35 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
-    return mapResult(
-      await fetchHomeReportChunks(fetchChunks, window),
-      (reports) =>
+    return this.onUnitClock(async (zone) =>
+      mapResult(await fetchHomeReportChunks(fetchChunks, window), (reports) =>
         toHomeLineOptions({
           locale: this.api.locale,
           reports,
           unit: TEMPERATURE_UNIT,
           window,
+          zone,
         }),
+      ),
     )
+  }
+
+  /**
+   * Runs a read of a `/report/v1/*` endpoint: those speak the unit's
+   * own clock, which only the registry's model tells. Such a read
+   * answers `not-found` for an id the registry no longer holds, like
+   * the reads the API client routes on the registry, where an accessor
+   * throws.
+   * @template T - Value the read answers.
+   * @param read - The read, given the unit's IANA timezone.
+   * @returns What the read answers, or the `not-found` failure.
+   */
+  protected async onUnitClock<T>(
+    read: (zone: string) => Promise<Result<T>>,
+  ): Promise<Result<T>> {
+    return this.exists
+      ? read(this.model.data.timeZone)
+      : err({ entityId: this.id, kind: 'not-found' })
   }
 
   /**
