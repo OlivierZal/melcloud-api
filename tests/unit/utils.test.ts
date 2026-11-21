@@ -18,7 +18,7 @@ import {
   toZonedWallClock,
   typedFromEntries,
 } from '../../src/utils.ts'
-import { okValue } from '../helpers.ts'
+import { okValue, onHost } from '../helpers.ts'
 
 describe.concurrent('ata set-to-list conversion', () => {
   it('maps set keys to list keys', () => {
@@ -203,18 +203,19 @@ describe.concurrent(padHourlyChartToMidnight, () => {
 })
 
 // The wall-clock projections are the holiday-mode contract's floor: the
-// caller speaks its own zone, the wires store UTC. The pair must be
-// exact inverses outside DST transitions, and each direction carries
-// its own failure posture — a write throws before I/O, a read passes
-// verbatim rather than taking a sync down.
+// caller speaks its own zone, each wire a clock of its own (UTC on
+// Classic, the unit's on Home). The UTC pair must be exact inverses
+// outside DST transitions, and each direction carries its own failure
+// posture — a write throws before I/O, a read passes verbatim rather
+// than taking a sync down.
 describe('wall-clock projections', () => {
   it('projects a summer wall clock onto UTC and back', () => {
     const utc = toUtcWallClock('2026-07-10T20:30', 'Europe/Paris')
 
     expect(utc.toString()).toBe('2026-07-10T18:30:00')
-    expect(toZonedWallClock(utc.toString(), 'Europe/Paris')).toBe(
-      '2026-07-10T20:30:00',
-    )
+    expect(
+      toZonedWallClock(utc.toString(), { from: 'UTC', to: 'Europe/Paris' }),
+    ).toBe('2026-07-10T20:30:00')
   })
 
   it('projects a winter wall clock with the winter offset', () => {
@@ -231,23 +232,32 @@ describe('wall-clock projections', () => {
     )
   })
 
-  it('falls back to the host zone when none is given', () => {
-    const zone = Temporal.Now.timeZoneId()
+  // New York has changed its clocks on 2026-03-15 and Paris has not:
+  // five hours apart that day, six a month later.
+  it.each([
+    { caller: '2026-03-15T09:15:00', wire: '2026-03-15T04:15:00' },
+    { caller: '2026-04-10T20:30:00', wire: '2026-04-10T14:30:00' },
+  ])(
+    'reads $wire on the clock the wire names, not on UTC',
+    ({ caller, wire }) => {
+      expect(
+        toZonedWallClock(wire, {
+          from: 'America/New_York',
+          to: 'Europe/Paris',
+        }),
+      ).toBe(caller)
+    },
+  )
 
-    expect(toUtcWallClock('2026-07-10T20:30').toString()).toBe(
-      Temporal.PlainDateTime.from('2026-07-10T20:30')
-        .toZonedDateTime(zone)
-        .withTimeZone('UTC')
-        .toPlainDateTime()
-        .toString(),
-    )
-    expect(toZonedWallClock('2026-07-10T18:30')).toBe(
-      Temporal.PlainDateTime.from('2026-07-10T18:30')
-        .toZonedDateTime('UTC')
-        .withTimeZone(zone)
-        .toPlainDateTime()
-        .toString(),
-    )
+  // The host is put in Tokyo, which is never on UTC: on a host that is
+  // (a CI runner), a fallback to UTC would otherwise read the same.
+  it('falls back to the host zone when none is given', async () => {
+    await expect(
+      onHost('Asia/Tokyo', () => [
+        toUtcWallClock('2026-07-10T20:30').toString(),
+        toZonedWallClock('2026-07-10T18:30', { from: 'UTC' }),
+      ]),
+    ).resolves.toStrictEqual(['2026-07-10T11:30:00', '2026-07-11T03:30:00'])
   })
 
   it('throws on a malformed write-side datetime', () => {
@@ -257,7 +267,18 @@ describe('wall-clock projections', () => {
   })
 
   it('passes a malformed read-side datetime through verbatim', () => {
-    expect(toZonedWallClock('not-a-date', 'Europe/Paris')).toBe('not-a-date')
+    expect(
+      toZonedWallClock('not-a-date', { from: 'UTC', to: 'Europe/Paris' }),
+    ).toBe('not-a-date')
+  })
+
+  it('passes a datetime through verbatim when the wire names no timezone', () => {
+    expect(
+      toZonedWallClock('2026-07-10T18:30:00', {
+        from: 'not-a-zone',
+        to: 'Europe/Paris',
+      }),
+    ).toBe('2026-07-10T18:30:00')
   })
 })
 

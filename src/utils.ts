@@ -44,10 +44,9 @@ export const clampToRange = (
 
 /**
  * Projects a caller-local wall-clock datetime onto the UTC wall clock
- * the MELCloud wires store. Counterpart of {@link toZonedWallClock}.
- * Malformed input throws, so a write fails before any I/O; a local time
- * a DST transition skips or repeats resolves per Temporal's default
- * disambiguation (`'compatible'`).
+ * the Classic wire stores. Malformed input throws, so a write fails
+ * before any I/O; a local time a DST transition skips or repeats
+ * resolves per Temporal's default disambiguation (`'compatible'`).
  * @param local - Zoneless ISO 8601 datetime, read as wall clock in
  * `timeZone`.
  * @param timeZone - IANA timezone the wall clock belongs to; the host's
@@ -64,25 +63,34 @@ export const toUtcWallClock = (
     .toPlainDateTime()
 
 /**
- * Projects a UTC wall-clock datetime from the MELCloud wires onto the
- * caller's wall clock. Counterpart of {@link toUtcWallClock}. An
+ * Projects a wall-clock datetime of a MELCloud wire onto the caller's
+ * wall clock. The wire's clock is named at every call, the two wires
+ * having one each: UTC on Classic, the unit's own on Home. An
  * unparseable value passes through verbatim — the same tolerance the
  * report query dates get: a read must never take a sync down.
- * @param utc - Zoneless ISO 8601 datetime, read as wall clock in UTC.
- * @param timeZone - IANA timezone to project into; the host's zone when
+ * @param wallClock - Zoneless ISO 8601 datetime, read as wall clock in
+ * `zones.from`.
+ * @param zones - The two clocks.
+ * @param zones.from - IANA timezone the wire's wall clock belongs to.
+ * @param zones.to - IANA timezone to project into; the host's zone when
  * omitted.
- * @returns The same instant's wall clock in `timeZone`.
+ * @returns The same instant's wall clock in `zones.to`.
  */
-export const toZonedWallClock = (utc: string, timeZone?: string): string => {
-  const zone = timeZone ?? Temporal.Now.timeZoneId()
+export const toZonedWallClock = (
+  wallClock: string,
+  {
+    from,
+    to = Temporal.Now.timeZoneId(),
+  }: { from: string; to?: string | undefined },
+): string => {
   try {
-    return Temporal.PlainDateTime.from(utc)
-      .toZonedDateTime('UTC')
-      .withTimeZone(zone)
+    return Temporal.PlainDateTime.from(wallClock)
+      .toZonedDateTime(from)
+      .withTimeZone(to)
       .toPlainDateTime()
       .toString()
   } catch {
-    return utc
+    return wallClock
   }
 }
 

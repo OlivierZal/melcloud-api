@@ -71,23 +71,27 @@ export const toHomeProtectionState = (
 
 /**
  * Maps a Home `/context` holiday descriptor onto the cross-dialect read
- * state; `null` (never configured) passes through. The bounds are read
- * as UTC wall clock (CLAUDE.md, the two-clocks entry, says what that
- * rests on) and come back projected onto the caller's clock.
+ * state; `null` (never configured) passes through. The wire holds a
+ * window on its unit's own wall clock (CLAUDE.md, the holiday-window
+ * entry, has the measures), and both bounds come back projected onto
+ * the caller's; one in the hour that clock repeats reads as its first
+ * pass, the wire's zoneless bound telling neither.
  * @param holidayMode - Wire descriptor, or `null`.
- * @param timeZone - The caller's IANA timezone; host zone when omitted.
+ * @param zones - The two clocks.
+ * @param zones.from - The unit's IANA timezone, off its `/context` entry.
+ * @param zones.to - The caller's IANA timezone; host zone when omitted.
  * @returns The neutral holiday-mode state, or `null`.
  */
 export const toHolidayModeState = (
   holidayMode: HomeHolidayMode | null,
-  timeZone?: string,
+  zones: { from: string; to?: string | undefined },
 ): HolidayModeState | null =>
   holidayMode === null
     ? null
     : {
-        endDate: toZonedWallClock(holidayMode.endDate, timeZone),
+        endDate: toZonedWallClock(holidayMode.endDate, zones),
         isEnabled: holidayMode.enabled,
-        startDate: toZonedWallClock(holidayMode.startDate, timeZone),
+        startDate: toZonedWallClock(holidayMode.startDate, zones),
       }
 
 /**
@@ -373,13 +377,18 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   /**
    * Reads the current holiday-mode window — the cross-dialect async
    * contract shared with the Classic facades; the answer comes from the
-   * synced `/context` model, no wire call, both bounds projected onto
-   * the caller's clock.
+   * synced `/context` model, no wire call, both bounds projected from
+   * the unit's clock onto the caller's.
    * @returns The holiday-mode state, or `null` when never configured.
    */
   public async getHolidayMode(): Promise<Result<HolidayModeState | null>> {
     const { data } = await resolved(this.model)
-    return ok(toHolidayModeState(data.holidayMode, this.api.timezone))
+    return ok(
+      toHolidayModeState(data.holidayMode, {
+        from: data.timeZone,
+        to: this.api.timezone,
+      }),
+    )
   }
 
   /**
@@ -449,9 +458,13 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
 
   /**
    * Updates this device's holiday-mode window — the cross-dialect write
-   * contract shared with the Classic facades; an enabled window's
-   * bounds are projected from the caller's clock onto the wire's UTC.
+   * contract shared with the Classic facades; an enabled window goes
+   * out on the unit's own clock, which the registry's model tells.
    * @param update - The new holiday-mode window.
+   * @throws A {@link RangeError} when an enabled window is malformed or
+   * ends before it can start on the unit's clock, an
+   * {@link EntityNotFoundError} when it is enabled on a unit the
+   * registry no longer holds; both before any request.
    */
   public async updateHolidayMode(update: HolidayModeUpdate): Promise<void> {
     await pushHomeHolidayMode(this.api, this.ownUnits, update)

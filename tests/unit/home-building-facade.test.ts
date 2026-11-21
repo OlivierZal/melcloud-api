@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HomeBuildingFacade } from '../../src/facades/home-building.ts'
 import { HomeRegistry } from '../../src/entities/home-registry.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { okValue } from '../helpers.ts'
+import { Temporal } from '../../src/temporal.ts'
+import { okValue, onHost } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeBuildingRef,
@@ -13,11 +14,20 @@ import {
 } from '../home-fixtures.ts'
 
 const FROST = { active: false, enabled: true, max: 12, min: 6 }
-const HOLIDAY = {
+
+// One window as two units hold it, each on its own wall clock: London
+// is an hour behind Paris.
+const PARIS_HOLIDAY = {
   active: false,
   enabled: true,
-  endDate: '2026-08-04T22:00:00',
-  startDate: '2026-07-31T22:00:00',
+  endDate: '2026-08-05T00:00:00',
+  startDate: '2026-08-01T00:00:00',
+}
+const LONDON_HOLIDAY = {
+  active: false,
+  enabled: true,
+  endDate: '2026-08-04T23:00:00',
+  startDate: '2026-07-31T23:00:00',
 }
 
 // A private registry per api double: these tests sync whole buildings
@@ -29,9 +39,10 @@ const syncMixedBuilding = (
   api: HomeAPIAdapter,
   overrides: {
     ataFrost?: typeof FROST | null
-    ataHoliday?: typeof HOLIDAY | null
+    ataHoliday?: typeof PARIS_HOLIDAY | null
     atwFrost?: typeof FROST | null
-    atwHoliday?: typeof HOLIDAY | null
+    atwHoliday?: typeof PARIS_HOLIDAY | null
+    atwTimeZone?: string
     overheat?: typeof FROST | null
   } = {},
 ): void => {
@@ -50,6 +61,7 @@ const syncMixedBuilding = (
         frostProtection: overrides.atwFrost ?? null,
         holidayMode: overrides.atwHoliday ?? null,
         id: 'atw-1',
+        timeZone: overrides.atwTimeZone ?? 'Europe/Paris',
       },
       { building: homeBuildingRef() },
     ),
@@ -146,14 +158,57 @@ describe('home building facade — per-target settings', () => {
     })
   })
 
-  it('aggregates the holiday window projected onto the caller clock', async () => {
+  it("reads each member's window on that member's clock before folding", async () => {
     const api = createApi()
-    syncMixedBuilding(api, { ataHoliday: HOLIDAY, atwHoliday: HOLIDAY })
+    syncMixedBuilding(api, {
+      ataHoliday: PARIS_HOLIDAY,
+      atwHoliday: LONDON_HOLIDAY,
+      atwTimeZone: 'Europe/London',
+    })
 
+    // The two members hold the same instants, so the fold is that
+    // window on the caller's clock and nothing reads as mixed.
     expect(okValue(await buildingOf(api).getHolidayMode())).toStrictEqual({
       endDate: '2026-08-05T00:00:00',
       isEnabled: true,
       startDate: '2026-08-01T00:00:00',
+    })
+  })
+
+  // The host sits in Tokyo, which is never on UTC, and the members in
+  // Paris.
+  it("reads the members' window on the host's clock when the API names none", async () => {
+    const api = createMockHomeApi({ registry: new HomeRegistry() })
+    syncMixedBuilding(api, {
+      ataHoliday: PARIS_HOLIDAY,
+      atwHoliday: PARIS_HOLIDAY,
+    })
+
+    // Midnight in a Paris summer is 07:00 in Tokyo.
+    await expect(
+      onHost('Asia/Tokyo', async () => buildingOf(api).getHolidayMode()),
+    ).resolves.toStrictEqual({
+      ok: true,
+      value: {
+        endDate: '2026-08-05T07:00:00',
+        isEnabled: true,
+        startDate: '2026-08-01T07:00:00',
+      },
+    })
+  })
+
+  it('folds two windows of the same wall clock on two clocks as mixed', async () => {
+    const api = createApi()
+    syncMixedBuilding(api, {
+      ataHoliday: PARIS_HOLIDAY,
+      atwHoliday: PARIS_HOLIDAY,
+      atwTimeZone: 'Europe/London',
+    })
+
+    expect(okValue(await buildingOf(api).getHolidayMode())).toStrictEqual({
+      endDate: null,
+      isEnabled: true,
+      startDate: null,
     })
   })
 
@@ -195,21 +250,58 @@ describe('home building facade — per-target settings', () => {
     })
   })
 
-  it('writes the holiday window for every member, projected to UTC', async () => {
-    const api = createApi()
-    syncMixedBuilding(api)
-
-    await buildingOf(api).updateHolidayMode({
-      endDate: '2026-08-05T00:00:00',
-      isEnabled: true,
-      startDate: '2026-08-01T00:00:00',
+  describe('holiday window writes', () => {
+    beforeEach(() => {
+      vi.spyOn(Temporal.Now, 'instant').mockReturnValue(
+        Temporal.Instant.from('2026-07-20T10:00:00Z'),
+      )
     })
 
-    expect(api.updateHolidayMode).toHaveBeenCalledWith({
-      enabled: true,
-      endDate: '2026-08-04T22:00:00',
-      startDate: '2026-07-31T22:00:00',
-      units: { ATA: ['ata-1'], ATW: ['atw-1'] },
+    afterEach(() => {
+      vi.mocked(Temporal.Now.instant).mockRestore()
+    })
+
+    it("writes the holiday window for every member, on the members' clock", async () => {
+      const api = createApi()
+      syncMixedBuilding(api)
+
+      await buildingOf(api).updateHolidayMode({
+        endDate: '2026-08-05T00:00:00',
+        isEnabled: true,
+        startDate: '2026-08-01T00:00:00',
+      })
+
+      expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
+        enabled: true,
+        endDate: '2026-08-05T00:00:00',
+        startDate: '2026-08-01T00:00:00',
+        units: { ATA: ['ata-1'], ATW: ['atw-1'] },
+      })
+    })
+
+    it('writes one window per member clock', async () => {
+      const api = createApi()
+      syncMixedBuilding(api, { atwTimeZone: 'Europe/London' })
+
+      await buildingOf(api).updateHolidayMode({
+        endDate: '2026-08-05T00:00:00',
+        isEnabled: true,
+        startDate: '2026-08-01T00:00:00',
+      })
+
+      expect(api.updateHolidayMode).toHaveBeenCalledTimes(2)
+      expect(api.updateHolidayMode).toHaveBeenCalledWith({
+        enabled: true,
+        endDate: '2026-08-05T00:00:00',
+        startDate: '2026-08-01T00:00:00',
+        units: { ATA: ['ata-1'] },
+      })
+      expect(api.updateHolidayMode).toHaveBeenCalledWith({
+        enabled: true,
+        endDate: '2026-08-04T23:00:00',
+        startDate: '2026-07-31T23:00:00',
+        units: { ATW: ['atw-1'] },
+      })
     })
   })
 

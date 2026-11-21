@@ -146,11 +146,11 @@ export interface HomeAPIConfig extends BaseAPIConfig {
    */
   readonly locale?: string | undefined
   /**
-   * IANA timezone identifier (e.g. `'Europe/Paris'`) used to render
-   * chart labels and resolve day/hour windows. Nothing on the wire is
-   * read with it, each endpoint family having a clock of its own; this
-   * timezone only affects local presentation. Defaults to UTC when
-   * unset.
+   * IANA timezone identifier (e.g. `'Europe/Paris'`): the caller's
+   * clock. Chart labels and day/hour windows are rendered on it (UTC
+   * when unset), and a holiday-mode window is given and read back on it
+   * (the host's zone when unset). Nothing on the wire is read with it,
+   * each endpoint family having a clock of its own.
    */
   readonly timezone?: string | undefined
 }

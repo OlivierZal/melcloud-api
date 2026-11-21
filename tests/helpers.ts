@@ -1,6 +1,7 @@
-import { expect } from 'vitest'
+import { expect, vi } from 'vitest'
 
 import type { Result } from '../src/types/index.ts'
+import { Temporal } from '../src/temporal.ts'
 
 // What is OURS alone. Everything the SDK suites used to copy by hand —
 // `cast`, `defined`, `mock`, the logger/setting-store doubles, the
@@ -38,4 +39,26 @@ export const okValue = <T>(result: Result<T>): T => {
     throw new Error(`Expected ok result, got ${JSON.stringify(result.error)}`)
   }
   return result.value
+}
+
+/**
+ * Test-only helper: runs `run` on a host whose system timezone is
+ * `timeZone`, the zone the SDK falls back on wherever a caller names
+ * none. Pick one that is never on UTC: on a host that is (a CI runner),
+ * a fallback to UTC would otherwise pass for the host's.
+ * @template T - What `run` answers.
+ * @param timeZone - IANA timezone the host reports.
+ * @param run - The code under that host, synchronous or not.
+ * @returns What `run` answered.
+ */
+export const onHost = async <T>(
+  timeZone: string,
+  run: () => Promise<T> | T,
+): Promise<T> => {
+  vi.spyOn(Temporal.Now, 'timeZoneId').mockReturnValue(timeZone)
+  try {
+    return await run()
+  } finally {
+    vi.mocked(Temporal.Now.timeZoneId).mockRestore()
+  }
 }

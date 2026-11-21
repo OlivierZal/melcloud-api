@@ -10,7 +10,7 @@ import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtaDeviceCapabilities, ok } from '../../src/types/index.ts'
-import { okValue } from '../helpers.ts'
+import { okValue, onHost } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeDevice,
@@ -769,6 +769,96 @@ describe('home device ata facade', () => {
         units: { ATA: ['device-1'] },
       })
       expect(facade.supportsOverheat).toBe(true)
+    })
+
+    // A window of the far future needs no clock: nothing about it
+    // depends on when the suite runs.
+    it("writes an enabled holiday window on the unit's own clock", async () => {
+      const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+      const facade = new HomeDeviceAtaFacade(
+        api,
+        homeDevice({ id: 'device-1', timeZone: 'Europe/London' }),
+      )
+
+      await facade.updateHolidayMode({
+        endDate: '2099-08-05T00:00:00',
+        isEnabled: true,
+        startDate: '2099-08-01T00:00:00',
+      })
+
+      // Midnight in Paris is 23:00 the day before in London.
+      expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
+        enabled: true,
+        endDate: '2099-08-04T23:00:00',
+        startDate: '2099-07-31T23:00:00',
+        units: { ATA: ['device-1'] },
+      })
+    })
+
+    // The host sits in Tokyo, which is never on UTC, and the unit in
+    // Paris: neither a read on UTC nor one on the unit's own clock
+    // gives the caller's.
+    it("reads a holiday window back on the host's clock when the API names none", async () => {
+      const facade = new HomeDeviceAtaFacade(
+        createMockHomeApi(),
+        homeDevice({
+          holidayMode: {
+            enabled: true,
+            endDate: '2026-08-05T00:00:00',
+            startDate: '2026-08-01T00:00:00',
+          },
+          id: 'device-1',
+          timeZone: 'Europe/Paris',
+        }),
+      )
+
+      // Midnight in a Paris summer is 07:00 in Tokyo.
+      await expect(
+        onHost('Asia/Tokyo', async () => facade.getHolidayMode()),
+      ).resolves.toStrictEqual({
+        ok: true,
+        value: {
+          endDate: '2026-08-05T07:00:00',
+          isEnabled: true,
+          startDate: '2026-08-01T07:00:00',
+        },
+      })
+    })
+
+    it('refuses to enable holiday mode on a unit the registry no longer holds', async () => {
+      const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+      pruneHomeDevice('device-1')
+
+      // The window is written on the unit's clock, which only the
+      // registry's model tells.
+      await expect(
+        facade.updateHolidayMode({
+          endDate: '2099-08-05T00:00:00',
+          isEnabled: true,
+          startDate: '2099-08-01T00:00:00',
+        }),
+      ).rejects.toThrow(EntityNotFoundError)
+      expect(api.updateHolidayMode).not.toHaveBeenCalled()
+    })
+
+    it('still disables holiday mode on a unit the registry no longer holds', async () => {
+      const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+      pruneHomeDevice('device-1')
+
+      await facade.updateHolidayMode({
+        endDate: '2099-08-05T00:00:00',
+        isEnabled: false,
+        startDate: '2099-08-01T00:00:00',
+      })
+
+      expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
+        enabled: false,
+        endDate: '2099-08-05T00:00:00',
+        startDate: '2099-08-01T00:00:00',
+        units: { ATA: ['device-1'] },
+      })
     })
 
     it('should delegate getErrorLog and project the neutral entries', async () => {
