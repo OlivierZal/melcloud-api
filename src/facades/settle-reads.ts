@@ -8,6 +8,9 @@ import { type Result, ok } from '../types/index.ts'
  * @template T - What each read answers.
  * @param reads - The reads, already started.
  * @returns Every value, in read order, or the first failure.
+ * @throws Whatever a read rejects with, at once and whatever its place:
+ * a read that throws, where a failed one answers a result, has no result
+ * to rank among the others.
  */
 export const settleReads = async <T>(
   reads: readonly Promise<Result<T>>[],

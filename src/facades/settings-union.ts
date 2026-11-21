@@ -62,9 +62,10 @@ export interface SettingsTarget {
  * call of its own.
  * @param targets - The targets to combine; their order is the order of
  * the failures.
- * @returns The combined target. Its writes rethrow a single target
- * failure as itself and bundle several into one `AggregateError`, in
- * target order.
+ * @returns The combined target. Its reads reject, at once and whatever
+ * its place, with what a target's read throws where a failed read
+ * answers a result. Its writes rethrow a single target failure as
+ * itself and bundle several into one `AggregateError`, in target order.
  * @category Facades
  */
 export const combineSettingsTargets = (

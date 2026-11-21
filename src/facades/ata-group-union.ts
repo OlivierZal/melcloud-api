@@ -32,9 +32,10 @@ export type AtaGroup = Pick<
  * client and makes no wire call of its own.
  * @param groups - The groups to combine; their order is the order of
  * the member modes and of the failures.
- * @returns The combined group. Its write rethrows a single group failure
- * as itself and bundles several into one `AggregateError`, in group
- * order.
+ * @returns The combined group. Its read rejects, at once and whatever
+ * its place, with what a group's read throws where a failed read answers
+ * a result. Its write rethrows a single group failure as itself and
+ * bundles several into one `AggregateError`, in group order.
  * @category Facades
  */
 export const combineAtaGroups = (groups: readonly AtaGroup[]): AtaGroup => ({

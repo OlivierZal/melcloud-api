@@ -170,7 +170,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   contract every Classic facade, both dialects' device facades and the
   Home building facade answer, and returns one. Same read policy, in a
   module of its own now (`src/facades/settle-reads.ts`, which
-  `combineAtaGroups` shares): at once, fail closed. Same write policy:
+  `combineAtaGroups` shares): at once, fail closed, and a read that
+  THROWS where a failed one answers a `Result` (a Classic facade that
+  covers no device, a Home unit gone from the registry) rejects the
+  combined read at once, whatever its place. Same write policy:
   every target at once, no rollback. The fold is the Home building's own
   (`aggregateProtectionStates`, `aggregateHolidayModeStates`), which
   takes a fold among its members since then: a field one target already

@@ -9,6 +9,11 @@
  * class, absent from the interface, and only a consumer's `TS2551` found
  * it. These assertions turn that class of gap into a typecheck failure
  * naming the missing member.
+ *
+ * The settings contract is held the same way: `combineSettingsTargets`
+ * is documented as taking every Classic facade, both dialects' device
+ * facades and the Home building facade, and a host hands it the
+ * published types, which no test of this repository does.
  * @packageDocumentation
  */
 import type { ClassicDeviceType } from '../../src/constants.ts'
@@ -21,7 +26,22 @@ import type {
   ClassicDeviceAtwFacade as AtwInterface,
   ClassicBuildingFacade as BuildingInterface,
   ClassicDeviceFacade,
+  ClassicDeviceFacadeAny,
+  ClassicFacade,
+  ClassicZoneFacade,
 } from '../../src/facades/classic-types.ts'
+import type { HomeBuildingFacade } from '../../src/facades/home-building.ts'
+import type { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
+import type { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
+import type { SettingsTarget } from '../../src/facades/settings-union.ts'
+
+/**
+ * Fails to instantiate when a published facade stops answering the
+ * settings contract, and the compiler error names the member that no
+ * longer fits.
+ * @template TFacade - A facade a host hands to `combineSettingsTargets`.
+ */
+type AnswersSettings<TFacade extends SettingsTarget> = TFacade
 
 /**
  * Fails to instantiate when the mirror has drifted, and the compiler
@@ -60,3 +80,13 @@ export type ErvSurface = NothingUnpublished<
     ClassicDeviceFacade<typeof ClassicDeviceType.Erv>
   >
 >
+
+export type SettingsSurface = [
+  AnswersSettings<ClassicFacade>,
+  AnswersSettings<ClassicZoneFacade>,
+  AnswersSettings<BuildingInterface>,
+  AnswersSettings<ClassicDeviceFacadeAny>,
+  AnswersSettings<HomeBuildingFacade>,
+  AnswersSettings<HomeDeviceAtaFacade>,
+  AnswersSettings<HomeDeviceAtwFacade>,
+]
