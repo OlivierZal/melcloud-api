@@ -248,34 +248,37 @@ describe('holiday-mode write projection', () => {
     vi.mocked(Temporal.Now.instant).mockRestore()
   })
 
-  it("writes an enabled window on the unit's own clock", async () => {
-    homeDevice({ id: 'device-1', timeZone: 'America/New_York' })
-    const api = createMockHomeApi({ timezone: 'Europe/Paris' })
-
-    await writeHolidayMode(api, ['device-1'], WEEK)
-
-    // 08:00 in Paris is 02:00 in New York, six hours behind.
-    expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
-      enabled: true,
+  // 08:00 in Paris, the caller's clock: 02:00 in New York, six hours
+  // behind, and the bounds as given where the unit shares that clock.
+  it.each([
+    {
       endDate: '2026-12-01T02:00:00',
+      label: 'another clock than the caller',
       startDate: '2026-11-24T02:00:00',
-      units: { ATA: ['device-1'] },
-    })
-  })
-
-  it('writes the bounds as given where the caller and the unit share a clock', async () => {
-    homeDevice({ id: 'device-1', timeZone: 'Europe/Paris' })
-    const api = createMockHomeApi({ timezone: 'Europe/Paris' })
-
-    await writeHolidayMode(api, ['device-1'], WEEK)
-
-    expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
-      enabled: true,
+      timeZone: 'America/New_York',
+    },
+    {
       endDate: '2026-12-01T08:00:00',
+      label: "the caller's own clock",
       startDate: '2026-11-24T08:00:00',
-      units: { ATA: ['device-1'] },
-    })
-  })
+      timeZone: 'Europe/Paris',
+    },
+  ])(
+    "writes an enabled window on the unit's clock, for a unit on $label",
+    async ({ endDate, startDate, timeZone }) => {
+      homeDevice({ id: 'device-1', timeZone })
+      const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+
+      await writeHolidayMode(api, ['device-1'], WEEK)
+
+      expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
+        enabled: true,
+        endDate,
+        startDate,
+        units: { ATA: ['device-1'] },
+      })
+    },
+  )
 
   // The host sits in Tokyo, which is never on UTC: a fallback to UTC,
   // the assumption this write once made of the wire, has to change the

@@ -1,8 +1,9 @@
 import { defined } from '@olivierzal/api-core/testing'
-import { describe, expect, it, vi } from 'vitest'
+import { type Mock, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
+import type { HolidayModeUpdate } from '../../src/holiday-mode.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import {
@@ -16,6 +17,49 @@ import {
   homeDevice,
   resetHomeDevices,
 } from '../home-fixtures.ts'
+
+// One write per dialect, through the facade a host reaches it by: a
+// Classic building, a Home manager over one unit, each with the wire
+// call it ends on. The caller's clock is Paris on both.
+const writeOnClassic = async (
+  update: HolidayModeUpdate,
+): Promise<Mock<ClassicAPIAdapter['updateHolidayMode']>> => {
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [classicAtaDevice()],
+  })
+  const updateHolidayMode = vi
+    .fn<ClassicAPIAdapter['updateHolidayMode']>()
+    .mockResolvedValue({ AttributeErrors: null, Success: true })
+  const facade = new ClassicBuildingFacade(
+    createMockClassicApi({
+      registry,
+      timezone: 'Europe/Paris',
+      updateHolidayMode,
+    }),
+    defined(registry.buildings.getById(1)),
+  )
+  await facade.updateHolidayMode(update)
+  return updateHolidayMode
+}
+
+const writeOnHome = async (
+  update: HolidayModeUpdate,
+  timeZone: string,
+): Promise<Mock<HomeAPIAdapter['updateHolidayMode']>> => {
+  resetHomeDevices()
+  // Registers the unit into the shared test registry, which is how the
+  // manager resolves the ATA/ATW unit buckets and the unit's clock.
+  homeDevice({ id: 'device-1', timeZone })
+  const updateHolidayMode = vi
+    .fn<HomeAPIAdapter['updateHolidayMode']>()
+    .mockResolvedValue()
+  const manager = new HomeFacadeManager(
+    createMockHomeApi({ timezone: 'Europe/Paris', updateHolidayMode }),
+  )
+  await manager.updateHolidayMode(['device-1'], update)
+  return updateHolidayMode
+}
 
 // The write-side twin of the holiday-mode read contract: a DISABLED
 // window's dates are ignored by both wires, so neither dialect may
@@ -31,25 +75,7 @@ describe('holidayMode write — disabled window', () => {
   }
 
   it('classic clears the bounds without projecting them', async () => {
-    const registry = populatedClassicRegistry({
-      buildings: [classicBuildingData()],
-      devices: [classicAtaDevice()],
-    })
-    const updateHolidayMode = vi
-      .fn<ClassicAPIAdapter['updateHolidayMode']>()
-      .mockResolvedValue({ AttributeErrors: null, Success: true })
-    const api = createMockClassicApi({
-      registry,
-      timezone: 'Europe/Paris',
-      updateHolidayMode,
-    })
-    const facade = new ClassicBuildingFacade(
-      api,
-      defined(registry.buildings.getById(1)),
-    )
-
-    await facade.updateHolidayMode(DISABLE)
-
+    const updateHolidayMode = await writeOnClassic(DISABLE)
     const call = defined(updateHolidayMode.mock.lastCall?.[0])
 
     expect(call.postData.Enabled).toBe(false)
@@ -58,19 +84,9 @@ describe('holidayMode write — disabled window', () => {
   })
 
   it('home forwards the window untouched without projecting it', async () => {
-    // Registers the device into the shared test registry, which is how
-    // the manager resolves the ATA/ATW unit buckets.
-    homeDevice({ id: 'device-1' })
-    const updateHolidayMode = vi
-      .fn<HomeAPIAdapter['updateHolidayMode']>()
-      .mockResolvedValue()
-    const manager = new HomeFacadeManager(
-      createMockHomeApi({ timezone: 'Europe/Paris', updateHolidayMode }),
-    )
+    const updateHolidayMode = await writeOnHome(DISABLE, 'Europe/Paris')
 
-    await manager.updateHolidayMode(['device-1'], DISABLE)
-
-    expect(updateHolidayMode).toHaveBeenCalledWith({
+    expect(updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
       enabled: false,
       endDate: 'not-a-parsable-date',
       startDate: 'not-a-parsable-date',
@@ -95,25 +111,7 @@ describe('holidayMode write — enabled window', () => {
   }
 
   it('classic sends the window as UTC wall clock', async () => {
-    const registry = populatedClassicRegistry({
-      buildings: [classicBuildingData()],
-      devices: [classicAtaDevice()],
-    })
-    const updateHolidayMode = vi
-      .fn<ClassicAPIAdapter['updateHolidayMode']>()
-      .mockResolvedValue({ AttributeErrors: null, Success: true })
-    const api = createMockClassicApi({
-      registry,
-      timezone: 'Europe/Paris',
-      updateHolidayMode,
-    })
-    const facade = new ClassicBuildingFacade(
-      api,
-      defined(registry.buildings.getById(1)),
-    )
-
-    await facade.updateHolidayMode(WINDOW)
-
+    const updateHolidayMode = await writeOnClassic(WINDOW)
     const call = defined(updateHolidayMode.mock.lastCall?.[0])
 
     expect(call.postData.StartDate).toStrictEqual({
@@ -135,16 +133,7 @@ describe('holidayMode write — enabled window', () => {
   })
 
   it("home sends the window on the unit's wall clock", async () => {
-    resetHomeDevices()
-    homeDevice({ id: 'device-1', timeZone: 'Europe/London' })
-    const updateHolidayMode = vi
-      .fn<HomeAPIAdapter['updateHolidayMode']>()
-      .mockResolvedValue()
-    const manager = new HomeFacadeManager(
-      createMockHomeApi({ timezone: 'Europe/Paris', updateHolidayMode }),
-    )
-
-    await manager.updateHolidayMode(['device-1'], WINDOW)
+    const updateHolidayMode = await writeOnHome(WINDOW, 'Europe/London')
 
     expect(updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
       enabled: true,
