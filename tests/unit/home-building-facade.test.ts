@@ -78,6 +78,18 @@ const buildingOf = (api: HomeAPIAdapter): HomeBuildingFacade => {
 }
 
 describe('home building facade — per-target settings', () => {
+  // Every holiday window of this file lies ahead of this instant: a
+  // read finds it still on, and a write is not late for its start.
+  beforeEach(() => {
+    vi.spyOn(Temporal.Now, 'instant').mockReturnValue(
+      Temporal.Instant.from('2026-07-20T10:00:00Z'),
+    )
+  })
+
+  afterEach(() => {
+    vi.mocked(Temporal.Now.instant).mockRestore()
+  })
+
   it('resolves for a building whose only devices are ATW', () => {
     const api = createApi()
     api.registry.syncDevices([
@@ -167,11 +179,18 @@ describe('home building facade — per-target settings', () => {
     })
 
     // The two members hold the same instants, so the fold is that
-    // window on the caller's clock and nothing reads as mixed.
-    expect(okValue(await buildingOf(api).getHolidayMode())).toStrictEqual({
-      endDate: '2026-08-05T00:00:00',
-      isEnabled: true,
-      startDate: '2026-08-01T00:00:00',
+    // window on the caller's clock and nothing reads as mixed. The host
+    // sits in Tokyo: a fold that dropped the caller's zone on the way
+    // would land there.
+    await expect(
+      onHost('Asia/Tokyo', async () => buildingOf(api).getHolidayMode()),
+    ).resolves.toStrictEqual({
+      ok: true,
+      value: {
+        endDate: '2026-08-05T00:00:00',
+        isEnabled: true,
+        startDate: '2026-08-01T00:00:00',
+      },
     })
   })
 
@@ -208,6 +227,25 @@ describe('home building facade — per-target settings', () => {
     expect(okValue(await buildingOf(api).getHolidayMode())).toStrictEqual({
       endDate: null,
       isEnabled: true,
+      startDate: null,
+    })
+  })
+
+  it("reads a member's window as off from its end on that member's clock", async () => {
+    const api = createApi()
+    syncMixedBuilding(api, {
+      ataHoliday: PARIS_HOLIDAY,
+      atwHoliday: PARIS_HOLIDAY,
+      atwTimeZone: 'Europe/London',
+    })
+    // Midnight of the 5th has struck in Paris and not yet in London.
+    vi.mocked(Temporal.Now.instant).mockReturnValue(
+      Temporal.Instant.from('2026-08-04T22:30:00Z'),
+    )
+
+    expect(okValue(await buildingOf(api).getHolidayMode())).toStrictEqual({
+      endDate: null,
+      isEnabled: null,
       startDate: null,
     })
   })
@@ -250,58 +288,46 @@ describe('home building facade — per-target settings', () => {
     })
   })
 
-  describe('holiday window writes', () => {
-    beforeEach(() => {
-      vi.spyOn(Temporal.Now, 'instant').mockReturnValue(
-        Temporal.Instant.from('2026-07-20T10:00:00Z'),
-      )
+  it("writes the holiday window for every member, on the members' clock", async () => {
+    const api = createApi()
+    syncMixedBuilding(api)
+
+    await buildingOf(api).updateHolidayMode({
+      endDate: '2026-08-05T00:00:00',
+      isEnabled: true,
+      startDate: '2026-08-01T00:00:00',
     })
 
-    afterEach(() => {
-      vi.mocked(Temporal.Now.instant).mockRestore()
+    expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
+      enabled: true,
+      endDate: '2026-08-05T00:00:00',
+      startDate: '2026-08-01T00:00:00',
+      units: { ATA: ['ata-1'], ATW: ['atw-1'] },
+    })
+  })
+
+  it('writes one window per member clock', async () => {
+    const api = createApi()
+    syncMixedBuilding(api, { atwTimeZone: 'Europe/London' })
+
+    await buildingOf(api).updateHolidayMode({
+      endDate: '2026-08-05T00:00:00',
+      isEnabled: true,
+      startDate: '2026-08-01T00:00:00',
     })
 
-    it("writes the holiday window for every member, on the members' clock", async () => {
-      const api = createApi()
-      syncMixedBuilding(api)
-
-      await buildingOf(api).updateHolidayMode({
-        endDate: '2026-08-05T00:00:00',
-        isEnabled: true,
-        startDate: '2026-08-01T00:00:00',
-      })
-
-      expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
-        enabled: true,
-        endDate: '2026-08-05T00:00:00',
-        startDate: '2026-08-01T00:00:00',
-        units: { ATA: ['ata-1'], ATW: ['atw-1'] },
-      })
+    expect(api.updateHolidayMode).toHaveBeenCalledTimes(2)
+    expect(api.updateHolidayMode).toHaveBeenCalledWith({
+      enabled: true,
+      endDate: '2026-08-05T00:00:00',
+      startDate: '2026-08-01T00:00:00',
+      units: { ATA: ['ata-1'] },
     })
-
-    it('writes one window per member clock', async () => {
-      const api = createApi()
-      syncMixedBuilding(api, { atwTimeZone: 'Europe/London' })
-
-      await buildingOf(api).updateHolidayMode({
-        endDate: '2026-08-05T00:00:00',
-        isEnabled: true,
-        startDate: '2026-08-01T00:00:00',
-      })
-
-      expect(api.updateHolidayMode).toHaveBeenCalledTimes(2)
-      expect(api.updateHolidayMode).toHaveBeenCalledWith({
-        enabled: true,
-        endDate: '2026-08-05T00:00:00',
-        startDate: '2026-08-01T00:00:00',
-        units: { ATA: ['ata-1'] },
-      })
-      expect(api.updateHolidayMode).toHaveBeenCalledWith({
-        enabled: true,
-        endDate: '2026-08-04T23:00:00',
-        startDate: '2026-07-31T23:00:00',
-        units: { ATW: ['atw-1'] },
-      })
+    expect(api.updateHolidayMode).toHaveBeenCalledWith({
+      enabled: true,
+      endDate: '2026-08-04T23:00:00',
+      startDate: '2026-07-31T23:00:00',
+      units: { ATW: ['atw-1'] },
     })
   })
 

@@ -26,13 +26,9 @@ import {
   mapResult,
   ok,
 } from '../types/index.ts'
-import {
-  omitUndefined,
-  resolved,
-  toEpochMs,
-  toZonedWallClock,
-} from '../utils.ts'
+import { omitUndefined, resolved, toEpochMs } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
+import { toHolidayModeState } from './holiday-mode-state.ts'
 import {
   pushHomeFrostProtection,
   pushHomeHolidayMode,
@@ -73,26 +69,29 @@ export const toHomeProtectionState = (
  * Maps a Home `/context` holiday descriptor onto the cross-dialect read
  * state; `null` (never configured) passes through. The wire holds a
  * window on its unit's own wall clock (CLAUDE.md, the holiday-window
- * entry, has the measures), and both bounds come back projected onto
- * the caller's; one in the hour that clock repeats reads as its first
- * pass, the wire's zoneless bound telling neither.
+ * entry, has the measures): the window is read on that clock, a bound
+ * in the hour it repeats as its first pass, the wire's zoneless bound
+ * telling neither.
  * @param holidayMode - Wire descriptor, or `null`.
  * @param zones - The two clocks.
  * @param zones.from - The unit's IANA timezone, off its `/context` entry.
  * @param zones.to - The caller's IANA timezone; host zone when omitted.
  * @returns The neutral holiday-mode state, or `null`.
  */
-export const toHolidayModeState = (
+export const toHomeHolidayModeState = (
   holidayMode: HomeHolidayMode | null,
   zones: { from: string; to?: string | undefined },
 ): HolidayModeState | null =>
   holidayMode === null
     ? null
-    : {
-        endDate: toZonedWallClock(holidayMode.endDate, zones),
-        isEnabled: holidayMode.enabled,
-        startDate: toZonedWallClock(holidayMode.startDate, zones),
-      }
+    : toHolidayModeState(
+        {
+          endDate: holidayMode.endDate,
+          isEnabled: holidayMode.enabled,
+          startDate: holidayMode.startDate,
+        },
+        zones,
+      )
 
 /**
  * Shared scaffolding for every Home device facade. Holds the API
@@ -384,7 +383,7 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   public async getHolidayMode(): Promise<Result<HolidayModeState | null>> {
     const { data } = await resolved(this.model)
     return ok(
-      toHolidayModeState(data.holidayMode, {
+      toHomeHolidayModeState(data.holidayMode, {
         from: data.timeZone,
         to: this.api.timezone,
       }),

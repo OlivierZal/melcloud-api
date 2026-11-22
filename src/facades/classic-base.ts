@@ -47,12 +47,12 @@ import {
   mergeHourlyChartResults,
   padHourlyChartToMidnight,
   toUtcWallClock,
-  toZonedWallClock,
   withMinuteClockLabels,
 } from '../utils.ts'
 import { HourSchema, parseOrThrow } from '../validation/index.ts'
 import type { ClassicFacade } from './classic-types.ts'
 import type { ReportChartLineOptions } from './report-types.ts'
+import { toHolidayModeState } from './holiday-mode-state.ts'
 
 // Wire-to-contract read mappers: `*Defined: false` marks a feature the
 // account never configured, surfaced as `null` on the neutral state.
@@ -68,24 +68,21 @@ const toProtectionState = (
     : null
 
 // The wire stores UTC wall clock (its `TimeZone` field is a location
-// list, not a projection): both bounds come back projected onto the
-// caller's clock, `null` staying the wire's unset marker.
-const toHolidayModeState = (
+// list, not a projection): the window is read on that clock, `null`
+// staying the wire's unset marker.
+const toClassicHolidayModeState = (
   data: ClassicHolidayModeData,
   timeZone?: string,
 ): HolidayModeState | null =>
   data.HMDefined
-    ? {
-        endDate:
-          data.HMEndDate === null
-            ? null
-            : toZonedWallClock(data.HMEndDate, { from: 'UTC', to: timeZone }),
-        isEnabled: data.HMEnabled,
-        startDate:
-          data.HMStartDate === null
-            ? null
-            : toZonedWallClock(data.HMStartDate, { from: 'UTC', to: timeZone }),
-      }
+    ? toHolidayModeState(
+        {
+          endDate: data.HMEndDate,
+          isEnabled: data.HMEnabled,
+          startDate: data.HMStartDate,
+        },
+        { from: 'UTC', to: timeZone },
+      )
     : null
 
 // Settings can be defined at zone or device level, and the wire's
@@ -421,7 +418,7 @@ export abstract class ClassicBaseFacade<
             false,
           ),
       ),
-      (data) => toHolidayModeState(data, this.api.timezone),
+      (data) => toClassicHolidayModeState(data, this.api.timezone),
     )
   }
 

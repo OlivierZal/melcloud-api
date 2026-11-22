@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.1.1] - 2026-11-22
+
+### Fixed
+
+- **A holiday window that has ended reads as off, on both accounts.** `getHolidayMode` answered the wire's flag as `isEnabled`, and MELCloud Home keeps `enabled: true` once a window has closed (measured 2026-11-21: still `true` 102 s after an end, the unit back on by itself; how long it stays so is not known), so a host read a holiday that was over as still on. `isEnabled` now says that a window is set and that its end has not passed: the wire's flag until the end, `false` from it, the end judged on the wire's own clock (UTC on Classic, the unit's on Home) each time the state is read. The bounds are answered as before. The rule is one for both dialects, so that `isEnabled` means the same on each: what MELCloud Classic's own flag does after a window's end is not measured, and the state no longer depends on it for as long as that wire still answers the window's end. Before its start a window set ahead reads as the wire's flag says, as before. A window with no end, or with an end that cannot be read (the value, or the clock of its unit), reads as the wire's flag says too: nothing tells it has ended. The fold of a Home building or of `combineSettingsTargets` takes each member's state as it now reads.
+
 ## [62.1.0] - 2026-11-21
 
 ### Added
@@ -1098,7 +1104,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.1...HEAD
+[62.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.0...v62.1.1
 [62.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.3...v62.1.0
 [62.0.3]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.2...v62.0.3
 [62.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.1...v62.0.2

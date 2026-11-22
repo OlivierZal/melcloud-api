@@ -395,7 +395,7 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - The Home holiday window (`POST /monitor/holidaymode`, `holidayMode` in
   `/context`), measured by writes on ONE unit on 2026-11-21 (the owner's
   go, a UTC+1 unit, every window disabled afterwards). Five facts, and
-  what 62.0.3 does with each.
+  what the SDK does with each (62.0.3, and 62.1.1 for the fifth).
   (1) Both bounds are read on the UNIT's wall clock. A window written
   with its start three minutes ahead on that clock answered 200 and was
   `active`, the unit off (`Power` `False`), within two seconds of its
@@ -407,7 +407,7 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   each unit's clock (`pushHomeHolidayMode`, one write per clock the
   units sit on, a building's or a batch's units being free to differ),
   and a read projects each unit's bounds from its own clock
-  (`toHolidayModeState`). A bound in the hour a clock repeats is
+  (`toHomeHolidayModeState`). A bound in the hour a clock repeats is
   ambiguous on the wire itself, which carries no offset: a read takes
   its first pass.
   (2) The wire arms a window AT its start and takes none that has begun.
@@ -441,7 +441,20 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   clock in the hour it repeats, and as one second when less than a
   second apart. Every clock's write is built before the first goes out.
   (5) `enabled` says a window is set, `active` that it is in effect:
-  `enabled` was still `true` 102 s after a window had closed. A window
+  `enabled` was still `true` 102 s after a window had closed (how long
+  it stays so is not known). So the read state's `isEnabled` is the
+  flag AND an end not yet past, judged on the wire's own clock each
+  time the state is read (`toHolidayModeState`, 62.1.1, in
+  `src/facades/holiday-mode-state.ts`), and on BOTH dialects, the
+  neutral state meaning one thing. What Classic's `HMEnabled` does
+  once a window has ended is NOT measured, and neither is what it then
+  answers as `HMEndDate`: the state does not depend on the flag for as
+  long as the wire still answers the end. The end is read as the
+  bounds are projected, one parse: an end the wire left unset, or one
+  that cannot be read, the value or the unit's clock, closes nothing
+  and leaves the flag as it is (a read never takes a sync down). A
+  window set ahead reads as its flag says before its start (`true` on
+  MELCloud Home, measured); `active` is left unread. A window
   written a minute ahead over such a closed one, still enabled, was
   taken like the first: a 200, armed at its start, closed at its end,
   the unit back on by itself. A disabling write answers 200 and its
