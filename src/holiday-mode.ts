@@ -41,9 +41,9 @@ export interface AggregatedHolidayModeState {
  * Last-known holiday-mode window — the cross-dialect read twin of
  * {@link HolidayModeUpdate}. Classic maps its `HM*` wire fields onto it,
  * Home its camelCase `/context` descriptor; a `null` date is a window
- * bound the wire left unset. `isEnabled` means the same on both: a
- * window is set and its end, judged when the state is read, has not
- * passed.
+ * bound the wire left unset. `isEnabled` means the same on both: the
+ * wire's flag, and `false` once the window's end, judged when the
+ * state is read, has passed.
  * @category Facades
  */
 export interface HolidayModeState {
@@ -53,8 +53,8 @@ export interface HolidayModeState {
   readonly endDate: string | null
   /**
    * Whether a window is set and has not ended: the wire's flag until
-   * the window's end, `false` from it. A window set ahead reads `true`
-   * before its start.
+   * the window's end, `false` from it. Before its start a window set
+   * ahead reads as that flag says.
    */
   readonly isEnabled: boolean
   /**

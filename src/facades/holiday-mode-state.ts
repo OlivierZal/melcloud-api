@@ -1,6 +1,6 @@
 import type { HolidayModeState } from '../holiday-mode.ts'
 import { Temporal } from '../temporal.ts'
-import { toEpochMs, toZonedWallClock } from '../utils.ts'
+import { toZonedWallClock } from '../utils.ts'
 
 // A holiday window as a wire holds it, under the neutral field names:
 // both bounds on the wire's own wall clock, the flag as the wire says
@@ -11,14 +11,22 @@ interface WireHolidayWindow {
   readonly startDate: string | null
 }
 
-// An end the wire left unset, or one that cannot be read, closes
-// nothing: the wire's flag then stands alone.
+// The end is read as the projection reads it (`toZonedWallClock`): the
+// same parse, the same pass of an hour its clock repeats. One the wire
+// left unset, or one that cannot be read, the value or its clock,
+// closes nothing: the wire's flag then stands alone.
 const hasEnded = (endDate: string | null, timeZone: string): boolean => {
-  const endEpochMs = endDate === null ? null : toEpochMs(endDate, timeZone)
-  return (
-    endEpochMs !== null &&
-    endEpochMs <= Temporal.Now.instant().epochMilliseconds
-  )
+  if (endDate === null) {
+    return false
+  }
+  try {
+    return (
+      Temporal.PlainDateTime.from(endDate).toZonedDateTime(timeZone)
+        .epochMilliseconds <= Temporal.Now.instant().epochMilliseconds
+    )
+  } catch {
+    return false
+  }
 }
 
 const toCallerClock = (
@@ -29,13 +37,13 @@ const toCallerClock = (
 
 /**
  * Maps a wire's holiday window onto the cross-dialect read state, the
- * one place that says what "on" means for both wires: a window is on
- * until its end, and off from it, whatever flag the wire still holds
- * then. MELCloud Home keeps its flag after a window has closed, and
- * what MELCloud Classic keeps is not measured (CLAUDE.md, the
- * holiday-window entry). The end is judged on the wire's own clock,
- * where it was written, and both bounds come back projected onto the
- * caller's.
+ * one place that says what "on" means for both wires: the wire's flag
+ * until the window's end, and off from it, whatever flag the wire
+ * still holds then. MELCloud Home keeps its flag after a window has
+ * closed, and what MELCloud Classic keeps is not measured (CLAUDE.md,
+ * the holiday-window entry). The end is judged on the wire's own
+ * clock, where it was written, and both bounds come back projected
+ * onto the caller's.
  * @param window - The wire's window.
  * @param window.endDate - Its end on the wire's clock, `null` when
  * unset.

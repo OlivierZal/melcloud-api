@@ -446,10 +446,15 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   flag AND an end not yet past, judged on the wire's own clock each
   time the state is read (`toHolidayModeState`, 62.1.1, in
   `src/facades/holiday-mode-state.ts`), and on BOTH dialects, the
-  neutral state meaning one thing: what Classic's `HMEnabled` does
-  once a window has ended is NOT measured, and the state does not
-  depend on it. A window set ahead reads on before its start, and one
-  with no end as its flag says; `active` is left unread. A window
+  neutral state meaning one thing. What Classic's `HMEnabled` does
+  once a window has ended is NOT measured, and neither is what it then
+  answers as `HMEndDate`: the state does not depend on the flag for as
+  long as the wire still answers the end. The end is read as the
+  bounds are projected, one parse: an end the wire left unset, or one
+  that cannot be read, the value or the unit's clock, closes nothing
+  and leaves the flag as it is (a read never takes a sync down). A
+  window set ahead reads as its flag says before its start (`true` on
+  MELCloud Home, measured); `active` is left unread. A window
   written a minute ahead over such a closed one, still enabled, was
   taken like the first: a 200, armed at its start, closed at its end,
   the unit back on by itself. A disabling write answers 200 and its

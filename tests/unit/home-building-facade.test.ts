@@ -179,11 +179,18 @@ describe('home building facade — per-target settings', () => {
     })
 
     // The two members hold the same instants, so the fold is that
-    // window on the caller's clock and nothing reads as mixed.
-    expect(okValue(await buildingOf(api).getHolidayMode())).toStrictEqual({
-      endDate: '2026-08-05T00:00:00',
-      isEnabled: true,
-      startDate: '2026-08-01T00:00:00',
+    // window on the caller's clock and nothing reads as mixed. The host
+    // sits in Tokyo: a fold that dropped the caller's zone on the way
+    // would land there.
+    await expect(
+      onHost('Asia/Tokyo', async () => buildingOf(api).getHolidayMode()),
+    ).resolves.toStrictEqual({
+      ok: true,
+      value: {
+        endDate: '2026-08-05T00:00:00',
+        isEnabled: true,
+        startDate: '2026-08-01T00:00:00',
+      },
     })
   })
 
