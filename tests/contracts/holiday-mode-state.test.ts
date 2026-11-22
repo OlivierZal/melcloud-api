@@ -1,5 +1,5 @@
 import { defined } from '@olivierzal/api-core/testing'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
@@ -7,6 +7,7 @@ import type { HolidayModeState } from '../../src/holiday-mode.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
+import { Temporal } from '../../src/temporal.ts'
 import { err, ok } from '../../src/types/index.ts'
 import {
   classicAtaDevice,
@@ -51,30 +52,51 @@ const HOME_UNIT_TIMEZONE = 'America/New_York'
 // +2): a projection that hardcodes any one offset has to change the
 // result. Start and end stay far apart and ordered, so a swap has to
 // as well.
-const CASES: readonly {
+interface WindowCase {
   readonly classicWire: BoundedWindow | null
   readonly homeWire: BoundedWindow | null
   readonly label: string
   readonly state: BoundedWindow | null
-}[] = [
-  {
-    classicWire: {
-      endDate: '2026-04-10T18:30:00',
-      isEnabled: true,
-      startDate: '2026-03-15T08:15:00',
-    },
-    homeWire: {
-      endDate: '2026-04-10T14:30:00',
-      isEnabled: true,
-      startDate: '2026-03-15T04:15:00',
-    },
-    label: 'an enabled window straddling both clock changes',
-    state: {
-      endDate: '2026-04-10T20:30:00',
-      isEnabled: true,
-      startDate: '2026-03-15T09:15:00',
-    },
+}
+
+const ENABLED_WINDOW = {
+  classicWire: {
+    endDate: '2026-04-10T18:30:00',
+    isEnabled: true,
+    startDate: '2026-03-15T08:15:00',
   },
+  homeWire: {
+    endDate: '2026-04-10T14:30:00',
+    isEnabled: true,
+    startDate: '2026-03-15T04:15:00',
+  },
+  label: 'an enabled window straddling both clock changes',
+  state: {
+    endDate: '2026-04-10T20:30:00',
+    isEnabled: true,
+    startDate: '2026-03-15T09:15:00',
+  },
+} satisfies WindowCase
+
+// Every window of this file lies ahead of this instant, so each reads
+// as its wire holds it; the clauses about a window's end move the clock
+// themselves. The enabled window ends at one instant on its three
+// clocks: 18:30 UTC, 14:30 in New York, 20:30 in Paris.
+const BEFORE_EVERY_WINDOW = '2026-03-01T00:00:00Z'
+const ENABLED_WINDOW_END = '2026-04-10T18:30:00Z'
+
+const stopClockAt = (instant: string): void => {
+  vi.spyOn(Temporal.Now, 'instant').mockReturnValue(
+    Temporal.Instant.from(instant),
+  )
+}
+
+const restartClock = (): void => {
+  vi.mocked(Temporal.Now.instant).mockRestore()
+}
+
+const CASES: readonly WindowCase[] = [
+  ENABLED_WINDOW,
   {
     classicWire: {
       endDate: '2026-11-20T21:45:00',
@@ -115,7 +137,12 @@ const describeHolidayModeStateContract = (
   ) => HolidayModeState | Promise<HolidayModeState | null> | null,
 ): void => {
   describe(`holidayModeState — ${name}`, () => {
-    beforeEach(resetHomeDevices)
+    beforeEach(() => {
+      resetHomeDevices()
+      stopClockAt(BEFORE_EVERY_WINDOW)
+    })
+
+    afterEach(restartClock)
 
     it.each(CASES)(
       "projects $label from the wire's own clock onto the caller's",
@@ -123,6 +150,33 @@ const describeHolidayModeStateContract = (
         await expect(
           Promise.resolve(read(wireOf(wires))),
         ).resolves.toStrictEqual(wires.state)
+      },
+    )
+
+    // One meaning for both dialects: a window is on until its end, and
+    // off from it, whatever flag the wire still holds then. MELCloud
+    // Home keeps its flag after a window has closed (measured
+    // 2026-11-21); what MELCloud Classic keeps is not measured, and the
+    // state depends on neither. The end is judged on the wire's own
+    // clock, which the second before it tells: read as UTC, the New
+    // York end falls four hours early; read on the caller's clock, the
+    // UTC one two hours early.
+    it.each([
+      {
+        isEnabled: true,
+        moment: 'a second before',
+        now: '2026-04-10T18:29:59Z',
+      },
+      { isEnabled: false, moment: 'at', now: ENABLED_WINDOW_END },
+      { isEnabled: false, moment: 'weeks after', now: '2026-06-01T00:00:00Z' },
+    ])(
+      'reads an enabled window $moment its end with isEnabled $isEnabled',
+      async ({ isEnabled, now }) => {
+        stopClockAt(now)
+
+        await expect(
+          Promise.resolve(read(wireOf(ENABLED_WINDOW))),
+        ).resolves.toStrictEqual({ ...ENABLED_WINDOW.state, isEnabled })
       },
     )
   })
@@ -215,6 +269,33 @@ describeHolidayModeStateContract(
 // nullable, while the Home wire types both dates as required and uses a
 // null descriptor as its single absence marker.
 describe('holidayModeState — Classic-only wire shapes', () => {
+  beforeEach(() => {
+    stopClockAt(BEFORE_EVERY_WINDOW)
+  })
+
+  afterEach(restartClock)
+
+  // No end to judge: the wire's flag is all there is.
+  it('keeps an enabled window with no end enabled, whenever it is read', async () => {
+    stopClockAt('2099-01-01T00:00:00Z')
+
+    await expect(
+      classicFacade({
+        HMDefined: true,
+        HMEnabled: true,
+        HMEndDate: null,
+        HMStartDate: '2026-05-12T21:00:00',
+      }).getHolidayMode(),
+    ).resolves.toStrictEqual({
+      ok: true,
+      value: {
+        endDate: null,
+        isEnabled: true,
+        startDate: '2026-05-12T23:00:00',
+      },
+    })
+  })
+
   it('keeps a null bound null instead of substituting its twin', async () => {
     await expect(
       classicFacade({

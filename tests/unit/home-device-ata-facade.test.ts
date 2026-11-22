@@ -804,8 +804,8 @@ describe('home device ata facade', () => {
         homeDevice({
           holidayMode: {
             enabled: true,
-            endDate: '2026-08-05T00:00:00',
-            startDate: '2026-08-01T00:00:00',
+            endDate: '2099-08-05T00:00:00',
+            startDate: '2099-08-01T00:00:00',
           },
           id: 'device-1',
           timeZone: 'Europe/Paris',
@@ -818,9 +818,9 @@ describe('home device ata facade', () => {
       ).resolves.toStrictEqual({
         ok: true,
         value: {
-          endDate: '2026-08-05T07:00:00',
+          endDate: '2099-08-05T07:00:00',
           isEnabled: true,
-          startDate: '2026-08-01T07:00:00',
+          startDate: '2099-08-01T07:00:00',
         },
       })
     })

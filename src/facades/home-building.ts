@@ -28,7 +28,7 @@ import {
   toHomeAtaValues,
 } from './home-ata-group.ts'
 import {
-  toHolidayModeState,
+  toHomeHolidayModeState,
   toHomeProtectionState,
 } from './home-base-device.ts'
 import {
@@ -179,7 +179,7 @@ export class HomeBuildingFacade {
     return ok(
       aggregateHolidayModeStates(
         members.map(({ data }) =>
-          toHolidayModeState(data.holidayMode, {
+          toHomeHolidayModeState(data.holidayMode, {
             from: data.timeZone,
             to: this.#api.timezone,
           }),
