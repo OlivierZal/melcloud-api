@@ -1641,17 +1641,28 @@ dispatcher })`.
   release marked **prerelease** publishes under the `next` dist-tag; a
   normal one under `latest`. The version comes from
   `package.json` at the released commit, so bump it before tagging.
+  Since configs 9.0.0 the job first judges that commit: the latest run
+  of `ci.yml` on `main` for it must have succeeded, and a run still
+  going is waited for (eight minutes at the most), so a release can be
+  cut as soon as its pull request is merged. The docs build is held to
+  the same step.
 - Prerelease/alpha flow keeps `main` on the target stable version (no
-  `-alpha` suffix): branch from `main`, bump, commit, push, then cut a
-  prerelease release off that branch — which publishes under `next`. The
-  release must target the pushed branch tip, so commit the version bump
-  first (otherwise the tag lands on the un-bumped commit):
+  `-alpha` suffix): branch from `main`, bump, commit, push, open a pull
+  request for the branch, then cut a prerelease release off that branch
+  — which publishes under `next`. The pull request is what gives the
+  commit a CI run, and a draft will do: the publish job refuses a
+  prerelease whose commit no run of `ci.yml` has judged, on whichever
+  branch. The nine alphas of July 2026 were cut without one, and none of
+  their commits ever ran the CI. Close the pull request once the alpha
+  is out. The release must target the pushed branch tip, so commit the
+  version bump first (otherwise the tag lands on the un-bumped commit):
 
   ```sh title="alpha"
   git switch -c release/41.0.0-alpha.0
   npm version 41.0.0-alpha.0 --no-git-tag-version
   git commit -am 'chore(release): 41.0.0-alpha.0'
   git push -u origin release/41.0.0-alpha.0
+  gh pr create --draft --fill
   gh release create v41.0.0-alpha.0 --target release/41.0.0-alpha.0 --prerelease
   ```
 
