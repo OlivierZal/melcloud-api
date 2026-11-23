@@ -68,11 +68,14 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
 
   /**
    * Setpoint granularity in °C, from the unit's advertised
-   * half-degree capability.
-   * @returns `0.5` on half-degree units, `1` otherwise.
+   * half-degree capability. A listing that does not say reads as half
+   * degrees: what every unit measured answers, and the one reading
+   * that can only send a unit what it was already sent.
+   * @returns `1` on a unit that says it holds whole degrees only,
+   * `0.5` otherwise.
    */
   public get temperatureStep(): number {
-    return ataTemperatureStep(this.data.HasHalfDegreeIncrements)
+    return ataTemperatureStep(this.data.HasHalfDegreeIncrements ?? true)
   }
 
   protected override readonly extractEnergyReport: (

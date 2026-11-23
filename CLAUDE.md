@@ -993,7 +993,13 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   moves the `x.25` tie half a degree up from where the unit alone put
   it, by decision. NOT measured: a whole-degree unit (none at hand; the
   step is read off the capability the official apps honour) and the
-  ATW zone setpoints, which keep their clamp alone.
+  ATW zone setpoints, which keep their clamp alone. A Classic listing
+  that does not carry `HasHalfDegreeIncrements` reads as HALF degrees
+  (the type says optional for that reason: nothing validates a unit's
+  listed payload): the eight units read all answer `true`, and read the
+  other way a missing flag would take half degrees away from a unit
+  that holds them, where this reading sends a unit nothing it was not
+  already sent.
   On Classic the rounding and the clamp are the facade's
   `normalizeUpdateData`, applied to what the caller ASKED, before the
   no-change filter: a request the step or the bounds bring back to the

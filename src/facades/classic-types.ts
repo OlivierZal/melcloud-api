@@ -67,8 +67,9 @@ export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
 > {
   /**
    * Setpoint granularity in °C, from the unit's advertised half-degree
-   * capability: `0.5` on half-degree units, `1` otherwise. A setpoint
-   * write is rounded to it before it is sent.
+   * capability: `1` on a unit that says it holds whole degrees only,
+   * `0.5` otherwise. A setpoint write is rounded to it before it is
+   * sent.
    */
   readonly temperatureStep: number
   /**

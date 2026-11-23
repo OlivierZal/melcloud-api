@@ -258,6 +258,34 @@ describe('ataSetpointClamp — the step a unit advertises', () => {
   )
 })
 
+// Nothing validates a Classic unit's listed payload, so the capability
+// can be missing where Home's schema requires it. Read as a whole-degree
+// unit, such a listing would take half degrees away from a unit that
+// holds them; read as half degrees, it sends a unit nothing it was not
+// already sent.
+describe('ataSetpointClamp — a Classic listing that does not advertise its step', () => {
+  it('reads as half degrees', async () => {
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData()],
+      devices: [classicAtaDevice()],
+    })
+    const device = defined(registry.devices.getById(1000))
+    device.update(cast({ HasHalfDegreeIncrements: undefined }))
+    const api = createMockClassicApi({ registry })
+    const facade = new ClassicDeviceAtaFacade(api, device)
+
+    expect(facade.temperatureStep).toBe(0.5)
+
+    await facade.updateValues({ SetTemperature: 16.4 })
+
+    expect(
+      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
+        defined(vi.mocked(api.updateValues).mock.lastCall?.[0]).postData,
+      ).SetTemperature,
+    ).toBe(16.5)
+  })
+})
+
 // Classic refuses a write that changes nothing before any request, and
 // the setpoint is judged as the unit will hold it: asked for a value
 // its step or its bounds bring back to the one it holds, the unit is

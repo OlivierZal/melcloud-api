@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- `temperatureStep` on the MELCloud Classic air-to-air facade, as the MELCloud Home one has it: `0.5` on a unit that advertises half degrees (`HasHalfDegreeIncrements`), `1` otherwise.
+- `temperatureStep` on the MELCloud Classic air-to-air facade, as the MELCloud Home one has it: `1` on a unit whose listing says it holds whole degrees only (`HasHalfDegreeIncrements: false`), `0.5` otherwise, a listing that does not say included.
 - **A MELCloud Classic unit that stops communicating is dated in the log.** A Classic unit reads unavailable once MELCloud has not heard from it for over a day, and nothing was written when that happened: a diagnostic report showed a greyed unit and no way to tell since when. The first listing that stamps a unit's last communication over 24 hours old now writes one error line, `ATA unit 123 has not communicated with MELCloud since 2026-05-03T14:22:00 (building time), over 24 h; it reads unavailable`, a client that starts over a silent unit included, and the first that stamps it fresh again writes `ATA unit 123 communicates with MELCloud again, last at … (building time); it reads available`. The unit is named by type and id, never by its name, and the stamp is the listing's own, on the building's clock. `ClassicRegistry.syncDevices` answers those edges (`ClassicCommunicationEvent`), as `HomeRegistry.syncDevices` answers the connectivity ones, and `hasStoppedCommunicating` is the predicate `isAvailable` reads.
 
 ### Changed
