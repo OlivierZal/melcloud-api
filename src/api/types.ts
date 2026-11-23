@@ -145,13 +145,18 @@ export interface BaseAPISettings {
   readonly username?: string | null
 }
 
+/* eslint-disable jsdoc/check-tag-names -- `@interface` is TypeDoc's
+   here, not JSDoc's: the reference renders the alias with the members
+   it resolves to, where it would name the core's type and stop */
 /**
  * Callback bundle invoked around SDK lifecycle moments — the core's
  * `LifecycleEvents` instantiated with this SDK's `SyncParams`. All
  * callbacks are optional and non-throwing.
+ * @interface
  * @category Configuration
  */
 export type LifecycleEvents = CoreLifecycleEvents<SyncParams>
+/* eslint-enable jsdoc/check-tag-names -- end of the TypeDoc-tagged alias */
 
 /**
  * Callback invoked after sync operations — the core's `SyncCallback`
