@@ -263,10 +263,22 @@ describe('mELCloud Classic API', () => {
         expect(logger.error).toHaveBeenCalledTimes(1)
         expect(logger.error).toHaveBeenCalledWith(
           '[Classic]',
-          `${label} unit 7 has not communicated with MELCloud since ${lastTimestamp} (building time), over 24 h; it reads unavailable`,
+          `${label} unit 7 has not communicated with MELCloud since ${lastTimestamp} (building time); it reads unavailable`,
         )
       },
     )
+
+    // The year-one stamp is MELCloud's marker for "never happened": it
+    // is worded, not dated.
+    it('says a unit never communicated when the stamp is the year-one marker', async () => {
+      const logger = await fetchWithLogger(listingWith('0001-01-01T00:00:00'))
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        'ATA unit 7 has never communicated with MELCloud; it reads unavailable',
+      )
+    })
 
     it('says nothing of a unit heard from within the day', async () => {
       const logger = await fetchWithLogger(listingWith(silentSince(2)))
@@ -307,6 +319,36 @@ describe('mELCloud Classic API', () => {
         ],
       ])
     })
+
+    // A stamp that cannot be read reads as heard from, so the tile is
+    // available again: the line says so without claiming a date.
+    it.each(['not a date', ''])(
+      'says the listing carries no date when a silent unit answers the stamp %j',
+      async (unreadable) => {
+        const logger = createLogger()
+        mockRequest.mockResolvedValue(
+          mockHttpResponse(listingWith(silentSince(200))),
+        )
+        const api = await createApi({ logger })
+        await api.fetch()
+        mockRequest.mockResolvedValue(mockHttpResponse(listingWith(unreadable)))
+        await api.fetch()
+
+        expect(logger.error).toHaveBeenCalledTimes(1)
+        expect(
+          vi
+            .mocked(logger.log)
+            .mock.calls.filter(([, line]) =>
+              String(line).includes('last communication'),
+            ),
+        ).toStrictEqual([
+          [
+            '[Classic]',
+            `ATA unit 7: MELCloud's listing gives no readable date for its last communication (${JSON.stringify(unreadable)}); it reads available`,
+          ],
+        ])
+      },
+    )
   })
 
   describe('the dropped-device report', () => {

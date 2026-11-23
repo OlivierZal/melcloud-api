@@ -25,4 +25,8 @@ export {
   type HomeConnectivityEvent,
   HomeRegistry,
 } from './home-registry.ts'
-export { hasStoppedCommunicating, STALE_COMMUNICATION_HOURS } from './types.ts'
+export {
+  hasStoppedCommunicating,
+  readCommunicationSilence,
+  STALE_COMMUNICATION_HOURS,
+} from './types.ts'

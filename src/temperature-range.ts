@@ -45,21 +45,6 @@ export interface TemperatureRange {
   readonly min: number
 }
 
-// Half-degree units advertise it; the rest step by a whole degree.
-const HALF_DEGREE_STEP = 0.5
-const WHOLE_DEGREE_STEP = 1
-
-/**
- * The setpoint step of an ATA unit, from the half-degree capability
- * both APIs advertise: Classic as `HasHalfDegreeIncrements`, Home as
- * `hasHalfDegreeIncrements`.
- * @param hasHalfDegreeIncrements - The unit's advertised capability.
- * @returns `0.5` on a half-degree unit, `1` otherwise.
- * @category Facades
- */
-export const ataTemperatureStep = (hasHalfDegreeIncrements: boolean): number =>
-  hasHalfDegreeIncrements ? HALF_DEGREE_STEP : WHOLE_DEGREE_STEP
-
 // Keyed on the Home vocabulary because the Classic side already has a
 // total bijection onto it (`operationModeFromClassic`): one table, both
 // dialects, no second grouping to drift out of step.

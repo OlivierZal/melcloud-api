@@ -13,6 +13,7 @@ import {
 import { operationModeFromClassic } from '../../src/enum-mappings.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
+import { classicAtaFlags } from '../../src/facades/classic-flags.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import {
   classicAtaDevice,
@@ -61,15 +62,18 @@ const CASES: readonly {
   },
 ]
 
-// A unit holds a setpoint on its own step and nothing else, and the
-// step is the unit's to advertise: half a degree, or a whole one.
-// Measured 2026-11-23 on a half-degree unit of each dialect: Classic
-// accepted 18.4, listed it until the unit next communicated (eight
-// minutes), then answered the setpoint the unit held before, the write
-// dropped; Home accepted 20.6 and answered 20.5 a minute later. So both
-// facades round the setpoint to the unit's step BEFORE they clamp it,
-// and the caller reads at once what the unit will hold. A tie goes up:
-// one rule for both, where Home alone ended 20.25 on 20.
+// An air-to-air unit holds a setpoint on its own step and nothing else,
+// and every such step lies on the half degree. Measured 2026-11-23 on a
+// half-degree unit of each dialect: Classic accepted 18.4, listed it
+// until the unit next communicated (eight minutes), then answered the
+// setpoint the unit held before, the write dropped; Home accepted 20.6
+// and answered 20.5 a minute later. So both facades round the setpoint
+// to the half degree BEFORE they clamp it, a tie going up, and the
+// caller reads at once what the unit will hold. A unit that advertises
+// whole degrees gets the same half-degree grid and no more: none could
+// be measured, and a host that computes its own targets on half degrees
+// (com.melcloud.extension) would read a whole-degree rounding as a
+// change made by hand.
 const STEP_CASES: readonly {
   readonly delivered: number
   readonly hasHalfDegrees: boolean
@@ -79,19 +83,19 @@ const STEP_CASES: readonly {
   {
     delivered: 16.5,
     hasHalfDegrees: true,
-    label: 'rounds 16.4 up to the half degree above on a half-degree unit',
+    label: 'rounds 16.4 up to the half degree above',
     requested: 16.4,
   },
   {
     delivered: 15.5,
     hasHalfDegrees: true,
-    label: 'rounds 15.6 down to the half degree below on a half-degree unit',
+    label: 'rounds 15.6 down to the half degree below',
     requested: 15.6,
   },
   {
     delivered: 15,
     hasHalfDegrees: true,
-    label: 'rounds 15.2 down to the whole degree on a half-degree unit',
+    label: 'rounds 15.2 down to the whole degree',
     requested: 15.2,
   },
   {
@@ -101,16 +105,17 @@ const STEP_CASES: readonly {
     requested: 20.75,
   },
   {
-    delivered: 16,
+    delivered: 16.5,
     hasHalfDegrees: false,
-    label: 'rounds 16.4 down to the whole degree on a whole-degree unit',
+    label: 'rounds to the half degree on a unit that advertises whole degrees',
     requested: 16.4,
   },
   {
-    delivered: 17,
+    delivered: 21.5,
     hasHalfDegrees: false,
-    label: 'sends a half degree up on a whole-degree unit',
-    requested: 16.5,
+    label:
+      'leaves a half degree as asked on a unit that advertises whole degrees',
+    requested: 21.5,
   },
   {
     delivered: 31,
@@ -156,7 +161,12 @@ const describeAtaSetpointClampContract = (
 const classicClampFacade = ({
   hasHalfDegrees = true,
   held = 24,
-}: { hasHalfDegrees?: boolean; held?: number } = {}): {
+  mode = ClassicOperationMode.heat,
+}: {
+  hasHalfDegrees?: boolean
+  held?: number
+  mode?: ClassicOperationModeType
+} = {}): {
   api: ReturnType<typeof createMockClassicApi>
   facade: ClassicDeviceAtaFacade
 } => {
@@ -166,6 +176,7 @@ const classicClampFacade = ({
       classicAtaDevice({
         Device: classicAtaDeviceData({
           HasHalfDegreeIncrements: hasHalfDegrees,
+          OperationMode: mode,
           SetTemperature: held,
         }),
       }),
@@ -181,15 +192,20 @@ const classicClampFacade = ({
   }
 }
 
+const lastPostData = (
+  api: ReturnType<typeof createMockClassicApi>,
+): ClassicSetDevicePostData<typeof ClassicDeviceType.Ata> =>
+  mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
+    defined(vi.mocked(api.updateValues).mock.lastCall?.[0]).postData,
+  )
+
 const classicClampWrite = async (
   values: Parameters<ClassicDeviceAtaFacade['updateValues']>[0],
   hasHalfDegrees = true,
 ): Promise<number> => {
   const { api, facade } = classicClampFacade({ hasHalfDegrees })
   await facade.updateValues(values)
-  return mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
-    defined(vi.mocked(api.updateValues).mock.lastCall?.[0]).postData,
-  ).SetTemperature
+  return lastPostData(api).SetTemperature
 }
 
 const homeClampWrite = async (
@@ -231,8 +247,9 @@ describeAtaSetpointClampContract(
     ),
 )
 
-// The step the rounding reads is a read of its own on both dialects,
-// from the half-degree capability each API advertises.
+// The step a unit advertises is a read on both dialects, from the
+// half-degree capability each API carries. No write depends on it:
+// every setpoint goes on the half degree.
 describe('ataSetpointClamp — the step a unit advertises', () => {
   beforeEach(resetHomeDevices)
 
@@ -259,10 +276,8 @@ describe('ataSetpointClamp — the step a unit advertises', () => {
 })
 
 // Nothing validates a Classic unit's listed payload, so the capability
-// can be missing where Home's schema requires it. Read as a whole-degree
-// unit, such a listing would take half degrees away from a unit that
-// holds them; read as half degrees, it sends a unit nothing it was not
-// already sent.
+// can be missing where Home's schema requires it. Such a listing reads
+// as half degrees, what every unit measured answers.
 describe('ataSetpointClamp — a Classic listing that does not advertise its step', () => {
   it('reads as half degrees', async () => {
     const registry = populatedClassicRegistry({
@@ -305,6 +320,54 @@ describe('ataSetpointClamp — Classic sends nothing for the setpoint the unit h
   })
 })
 
+// Only the flagged fields are applied by a Classic unit, and the flags
+// follow what CHANGES once the setpoint is the one the unit will hold.
+// The fixture cools from 16 up.
+describe('ataSetpointClamp — Classic flags what changes once the setpoint is rounded and bounded', () => {
+  it('flags the mode alone when the bounds bring the setpoint back to the one held', async () => {
+    const { api, facade } = classicClampFacade({ held: 16 })
+    await facade.updateValues({
+      OperationMode: ClassicOperationMode.cool,
+      SetTemperature: 12,
+    })
+
+    expect(lastPostData(api)).toMatchObject({
+      EffectiveFlags: classicAtaFlags.OperationMode,
+      OperationMode: ClassicOperationMode.cool,
+      SetTemperature: 16,
+    })
+  })
+
+  it('flags the mode and the setpoint when both change', async () => {
+    const { api, facade } = classicClampFacade({ held: 24 })
+    await facade.updateValues({
+      OperationMode: ClassicOperationMode.cool,
+      SetTemperature: 20.4,
+    })
+
+    expect(lastPostData(api)).toMatchObject({
+      EffectiveFlags:
+        classicAtaFlags.OperationMode + classicAtaFlags.SetTemperature,
+      SetTemperature: 20.5,
+    })
+  })
+
+  // A setpoint held out of its mode's bounds is brought back in when it
+  // is asked again: what is compared is what would be sent.
+  it('writes the bounded setpoint when the one held is out of bounds and is asked again', async () => {
+    const { api, facade } = classicClampFacade({
+      held: 12,
+      mode: ClassicOperationMode.cool,
+    })
+    await facade.updateValues({ SetTemperature: 12 })
+
+    expect(lastPostData(api)).toMatchObject({
+      EffectiveFlags: classicAtaFlags.SetTemperature,
+      SetTemperature: 16,
+    })
+  })
+})
+
 // The shared escape hatch is contract too: a mode outside the known
 // vocabulary resolves no range, and the setpoint then goes UNCLAMPED —
 // inventing a range would silently clamp with the wrong bounds. The
@@ -323,5 +386,19 @@ describe('ataSetpointClamp — out-of-vocabulary mode goes unclamped', () => {
     await expect(
       homeClampWrite(cast({ operationMode: 'Mystery', setTemperature: 50 })),
     ).resolves.toBe(50)
+  })
+
+  // No range is no reason to send a value no unit holds: the grid is
+  // the unit's, whatever the mode.
+  it('classic still puts an unclamped setpoint on the half degree', async () => {
+    await expect(
+      classicClampWrite(cast({ OperationMode: 99, SetTemperature: 50.4 })),
+    ).resolves.toBe(50.5)
+  })
+
+  it('home still puts an unclamped setpoint on the half degree', async () => {
+    await expect(
+      homeClampWrite(cast({ operationMode: 'Mystery', setTemperature: 50.4 })),
+    ).resolves.toBe(50.5)
   })
 })

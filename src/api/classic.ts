@@ -6,7 +6,7 @@ import {
   type ClassicCommunicationEvent,
   type ClassicDeviceAny,
   ClassicRegistry,
-  STALE_COMMUNICATION_HOURS,
+  readCommunicationSilence,
 } from '../entities/index.ts'
 import { resolveErrorLogWindow } from '../error-log.ts'
 import {
@@ -76,10 +76,6 @@ const deviceTypeNames = {
   [ClassicDeviceType.Atw]: 'Atw',
   [ClassicDeviceType.Erv]: 'Erv',
 } satisfies Record<ClassicDeviceType, string>
-
-// The stale window as the communication lines spell it, from the one
-// constant the facade's `isAvailable` reads.
-const STALE_WINDOW = `${String(STALE_COMMUNICATION_HOURS)} h`
 
 const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const APP_VERSION = '1.38.4.0'
@@ -966,22 +962,34 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   // Edge-triggered: one line, an error, on the first listing that
-  // stamps a unit's last communication over the stale window old — the
+  // stamps a unit's last communication past the stale window — the
   // predicate the facade's `isAvailable` flips on, so a diagnostic
   // report can DATE a greyed tile, and a host that starts over a silent
   // unit says so at its first sync — and one when the listing stamps it
-  // fresh again. The stamp is quoted as the wire gave it: building-local
-  // wall clock, which only day-scale reasoning is safe on.
+  // fresh again. The stamp is quoted as the wire gave it, building-local
+  // wall clock, and no duration is claimed beside it: judged against a
+  // UTC clock, a building west of UTC reads a day of silence after
+  // thirteen to twenty-three hours of it. The year-one stamp is
+  // MELCloud's marker for "never happened", worded rather than dated.
+  // A stamp that cannot be read reads as heard from, like every stamp
+  // the predicate cannot judge, so it ends a silent unit's episode: the
+  // line then says the listing carries no date, never that the unit
+  // "communicates again" at a date nobody can read.
   #reportCommunication({ transition, unit }: ClassicCommunicationEvent): void {
     const subject = describeUnit(unit)
-    if (transition.kind === 'stale') {
-      this.logger.error(
-        `${subject} has not communicated with MELCloud since ${transition.lastTimestamp} (building time), over ${STALE_WINDOW}; it reads unavailable`,
+    const { kind, lastTimestamp } = transition
+    if (kind === 'resumed') {
+      this.logger.log(
+        readCommunicationSilence(lastTimestamp) === null
+          ? `${subject}: MELCloud's listing gives no readable date for its last communication (${JSON.stringify(lastTimestamp)}); it reads available`
+          : `${subject} communicates with MELCloud again, last at ${lastTimestamp} (building time); it reads available`,
       )
       return
     }
-    this.logger.log(
-      `${subject} communicates with MELCloud again, last at ${transition.lastTimestamp} (building time); it reads available`,
+    this.logger.error(
+      isUninitializedWireDate(lastTimestamp)
+        ? `${subject} has never communicated with MELCloud; it reads unavailable`
+        : `${subject} has not communicated with MELCloud since ${lastTimestamp} (building time); it reads unavailable`,
     )
   }
 }

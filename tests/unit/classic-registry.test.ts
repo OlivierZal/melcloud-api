@@ -343,7 +343,8 @@ describe('the communication edges a device sync answers', () => {
   })
 
   // The availability contract reads a stamp it cannot parse as a unit
-  // heard from; the edge follows the same predicate.
+  // heard from, and the edge follows that same predicate: a line going
+  // one way while the tile goes the other would date nothing.
   it('answers none for a stamp it cannot read', () => {
     const registry = emptyRegistry()
 
@@ -351,6 +352,26 @@ describe('the communication edges a device sync answers', () => {
       [],
     )
   })
+
+  // So a silent unit whose stamp can no longer be read crosses
+  // `resumed`, carrying that stamp for the reporter to word, and
+  // `stale` again the day a stamp that can be read says so.
+  it.each(['not a date', '', '2026-11-23T11:59:00Z'])(
+    'reads a silent unit as heard from across the unreadable stamp %j',
+    (unreadable) => {
+      const registry = emptyRegistry()
+      const lastTimestamp = heardFrom(48)
+      registry.syncDevices([unitHeardFrom(lastTimestamp)])
+      const unit = registry.devices.getById(1000)
+
+      expect(registry.syncDevices([unitHeardFrom(unreadable)])).toStrictEqual([
+        { transition: { kind: 'resumed', lastTimestamp: unreadable }, unit },
+      ])
+      expect(
+        registry.syncDevices([unitHeardFrom(lastTimestamp)]),
+      ).toStrictEqual([{ transition: { kind: 'stale', lastTimestamp }, unit }])
+    },
+  )
 
   // A unit pruned from the listing takes its record with it: listed
   // again and still silent, it is a unit that joins silent.

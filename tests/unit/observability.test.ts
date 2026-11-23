@@ -54,6 +54,8 @@ describe.concurrent('the MELCloud vocabulary', () => {
     'contextkey',
     'id_token',
     'owneremail',
+    'passcode',
+    'randomkey',
     'refresh_token',
     'x-mitscontextkey',
   ])('marks the protocol key %s sensitive in any casing', (key) => {
@@ -120,6 +122,9 @@ describe.concurrent('the personal-data tier', () => {
     'Owner',
     'OwnerName',
     'Postcode',
+    'Scene',
+    'SceneOwner',
+    'WeatherForecast',
     'WeatherObservations',
     'Zone1Name',
     'Zone2Name',
@@ -220,6 +225,30 @@ describe.concurrent('the personal-data tier', () => {
         MapZoom: 12,
         Name: REDACTED,
       },
+    })
+  })
+
+  // Five keys the same reading listed and the first pass left undecided:
+  // two name a secret, three are of the kind already declared on their
+  // name alone. A forecast carries the sunrise and sunset the
+  // observations do, in the same body.
+  it('blanks the keys the wire names a secret, a scene or a forecast by', () => {
+    expect(
+      redaction.redactValue({
+        LoginMinutes: 0,
+        Passcode: 'pc-secret',
+        RandomKey: 'rk-secret',
+        Scene: { Name: 'Evening' },
+        SceneOwner: 42,
+        WeatherForecast: [{ Sunrise: '2026-11-23T08:10:00' }],
+      }),
+    ).toStrictEqual({
+      LoginMinutes: 0,
+      Passcode: REDACTED,
+      RandomKey: REDACTED,
+      Scene: REDACTED,
+      SceneOwner: REDACTED,
+      WeatherForecast: REDACTED,
     })
   })
 

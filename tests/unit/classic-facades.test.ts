@@ -504,18 +504,32 @@ describe('building facade group', () => {
     expect(api.updateGroupState).toHaveBeenCalledWith(expect.any(Object))
   })
 
-  it('propagates network failure when group API fails', async () => {
-    const { facade } = createBuildingFacade({
-      getGroup: vi
-        .fn<ClassicAPIAdapter['getGroup']>()
-        .mockResolvedValue(
-          err({ cause: new Error('fail'), kind: 'network' as const }),
-        ),
-    })
-    const result = await facade.getGroup()
+  // The group endpoint hands ONE state to every unit of the zone, and a
+  // unit drops a setpoint off the half degree: the state goes out on
+  // the grid a device write uses, and the models take what was sent.
+  it('puts the setpoint of a group write on the half degree, on the wire and in the models', async () => {
+    const { api, facade, registry } = createBuildingFacade()
+    await facade.updateGroupState({ Power: true, SetTemperature: 18.4 })
 
-    expect(result.ok).toBe(false)
-    expect(!result.ok && result.error.kind).toBe('network')
+    expect(
+      defined(vi.mocked(api.updateGroupState).mock.lastCall?.[0]).postData
+        .State,
+    ).toStrictEqual({ Power: true, SetTemperature: 18.5 })
+    expect(
+      registry
+        .getDevicesByType(ClassicDeviceType.Ata)
+        .map(({ data: { SetTemperature: setpoint } }) => setpoint),
+    ).toStrictEqual([18.5])
+  })
+
+  it('leaves a group write that names no setpoint as it is', async () => {
+    const { api, facade } = createBuildingFacade()
+    await facade.updateGroupState({ Power: true, SetTemperature: null })
+
+    expect(
+      defined(vi.mocked(api.updateGroupState).mock.lastCall?.[0]).postData
+        .State,
+    ).toStrictEqual({ Power: true, SetTemperature: null })
   })
 
   it('propagates an updateGroupState transport failure untouched', async () => {

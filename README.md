@@ -175,7 +175,7 @@ Every device facade has `name`, `power`, `rssi`, `isAvailable` (`false` after a 
 
 An air-to-water unit takes its zone and hot water fields: `OperationModeZone1`, `SetTemperatureZone1`, `SetTankWaterTemperature` and `ForcedHotWaterMode` on MELCloud Classic, `operationModeZone1`, `setTemperatureZone1`, `setTankWaterTemperature` and `forcedHotWaterMode` on MELCloud Home, with their `Zone2` twins. A ventilation unit takes `SetFanSpeed` and `VentilationMode`. The reference lists every field under `ClassicUpdateDeviceDataAtw`, `ClassicUpdateDeviceDataErv` and `HomeAtwValues`.
 
-The setpoint of an air-to-air unit is rounded to the unit's step, then clamped to the range the unit accepts, before it is sent: `temperatureStep` reads `0.5` or `1` on both APIs, and `16.4` goes out as `16.5` on a half-degree unit. A write that would change nothing throws `NoChangesError` and sends nothing: on MELCloud Classic when the registry already holds every value, the rounded setpoint included, on MELCloud Home when you pass no value. After a write, the registry holds the new state.
+The setpoint of an air-to-air unit is rounded to the half degree, then clamped to the range the unit accepts, before it is sent: `16.4` goes out as `16.5`. A group write on MELCloud Classic is rounded the same way. `temperatureStep` reads the step the unit advertises, `0.5` or `1`, on both APIs. A write that would change nothing throws `NoChangesError` and sends nothing: on MELCloud Classic when the registry already holds every value, the rounded setpoint included, on MELCloud Home when you pass no value. After a write, the registry holds the new state.
 
 ### Control several units at once
 
@@ -291,7 +291,7 @@ A write throws one of the errors below, or the network failure itself. All but `
 
 ### Logs and events
 
-`logger` takes any object with `log` and `error`, and defaults to `console`. The client logs each request and each response through `log` (the MELCloud Home sign-in exchange apart) and failures through `error`, prefixed `[Classic]` or `[Home]`. In those lines, and in the request and response a thrown `HttpError` carries, credentials and personal data read `******`: tokens, passwords, email addresses, device names, the account holder's name, postal addresses, coordinates, MAC and IP addresses. Building, floor and area names stay readable.
+`logger` takes any object with `log` and `error`, and defaults to `console`. The client logs each request and each response through `log` (the MELCloud Home sign-in exchange apart) and failures through `error`, prefixed `[Classic]` or `[Home]`. In those lines, and in the request and response a thrown `HttpError` carries, credentials and personal data read `******`: tokens, passwords, email addresses, the account holder's name, the names given to devices, buildings, floors and areas, postal addresses, coordinates, MAC and IP addresses.
 
 `events` takes callbacks: `onRequestStart`, `onRequestComplete`, `onRequestRetry` and `onRequestError` around each request, `onSyncComplete`, `onAuthenticationLost` and `onAuthenticationRestored`. A callback that throws is ignored.
 

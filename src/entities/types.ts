@@ -30,6 +30,26 @@ export const hasOutlivedStaleWindow = (
   STALE_COMMUNICATION_HOURS
 
 /**
+ * What a Classic unit's listing stamp says of its silence, three ways:
+ * `true` past {@link STALE_COMMUNICATION_HOURS}, `false` within it, and
+ * `null` when the stamp cannot be read — which says nothing either way.
+ * {@link hasStoppedCommunicating} reads that third answer as heard
+ * from; the line that reports a communication edge reads it to SAY the
+ * stamp carries no date, where dating the edge with it would be false.
+ * @param lastTimestamp - The listing's `LastTimeStamp`.
+ * @returns The verdict, or `null` for a stamp that cannot be read.
+ */
+export const readCommunicationSilence = (
+  lastTimestamp: string,
+): boolean | null => {
+  try {
+    return hasOutlivedStaleWindow(Temporal.PlainDateTime.from(lastTimestamp))
+  } catch {
+    return null
+  }
+}
+
+/**
  * Whether a Classic unit's last communication, as its listing stamps
  * it, is older than {@link STALE_COMMUNICATION_HOURS}: the ONE
  * predicate behind Classic's `isAvailable` and its `stale`
@@ -39,17 +59,13 @@ export const hasOutlivedStaleWindow = (
  * a healthy unit's apparent silence at 14 h for any pair of host and
  * building zones, where a configured-zone anchor could reach 26 h
  * (a UTC+13 host, a UTC-11 building) and flag a live unit. A stamp
- * that cannot be read, or one ahead of the clock, reads as heard from.
+ * that cannot be read, or one ahead of the clock, reads as heard from:
+ * no unit is greyed on a stamp nobody can read.
  * @param lastTimestamp - The listing's `LastTimeStamp`.
  * @returns `true` once the unit has been silent for over the window.
  */
-export const hasStoppedCommunicating = (lastTimestamp: string): boolean => {
-  try {
-    return hasOutlivedStaleWindow(Temporal.PlainDateTime.from(lastTimestamp))
-  } catch {
-    return false
-  }
-}
+export const hasStoppedCommunicating = (lastTimestamp: string): boolean =>
+  readCommunicationSilence(lastTimestamp) === true
 
 /**
  * Cross-dialect reachability contract: `true` while MELCloud can deliver writes

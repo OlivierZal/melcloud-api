@@ -99,17 +99,60 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   off); the two bitfield operators live in one module, `src/facades/classic-flag-bits.ts` (`combineFlags`, `hasFlag`), behind the family's two documented `no-bitwise` disables; their call sites (the `classic-update-devices.ts` flag test, the `classic-base-device.ts` flag accumulation, one facade test) name the operation instead of spelling it (2026-10-15).
 - `EffectiveFlags` is AUTHORITATIVE on the Classic set endpoints: the
   unit keeps the flagged fields and lets everything else in the body
-  fall back to its previous value a few seconds later. **Judge a
-  Classic write by re-reading the device seconds afterwards, never by
-  the POST's response** — the response is written before the unit has
-  settled and echoes the whole body it received. A probe on 2026-09-05
-  read that echo and concluded the opposite ("flags decorative, omitted
-  fields zero-filled"); 56.0.0 built a live-read-before-write path on
-  that premise and 57.0.0 reverted it (owner's five years of field
-  experience, 2026-09-08). `updateValues` therefore diffs the change set
-  against the registry snapshot, computes the flags from that diff, and
-  posts `{ ...setData, ...delta }` with no read of its own — the shape
-  that had worked for years.
+  fall back to its previous value. So the POST's answer SUFFICES, read
+  through its flags: the fields its `EffectiveFlags` mark are what the
+  registry model takes (`convertToListDeviceData`), and the rest of the
+  answer, the body echoed back, is ignored. **No read confirms a write,
+  before it or after it** (the owner's rule, from five years of field
+  experience, 2026-09-08, restated 2026-11-23). A read there spends a
+  request to learn the value just sent: measured 2026-11-23, the listing
+  answers the WRITTEN value until the unit has communicated (an off-grid
+  18.4 stayed listed for 8 min 18 s before the previous 18 came back),
+  and a host taking that for the unit's state would be wrong for
+  minutes. What the unit made of a write shows in the regular sync, in
+  its own time. That is also what the half-degree grid protects (below):
+  for a setpoint the unit will not hold, the flagged answer itself said
+  what the unit never took. A probe on 2026-09-05 read the UNFLAGGED
+  echo and concluded the opposite ("flags decorative, omitted fields
+  zero-filled"); 56.0.0 built a live read around every write on that
+  premise and 57.0.0 reverted it. `updateValues` therefore diffs the
+  change set against the registry snapshot, computes the flags from that
+  diff, and posts `{ ...setData, ...delta }` with no read of its own,
+  the shape that had worked for years. Three writes reach a unit and all
+  three are ONE POST: a device write (the model takes the answer's
+  flagged fields), a power write and a group write (MELCloud only
+  acknowledges them, so the member models take what was sent).
+  `tests/contracts/classic-write-wire.test.ts` pins both halves where
+  they matter, on the transport. One: each of the three is one request
+  (an air-to-water unit's route included), a write that changes nothing
+  none at all, and nothing leaves in the ten minutes that follow, so a
+  read added by any route (a decorator, a helper, a new adapter call, a
+  timer that waits for the unit to settle) fails the suite. Two: the
+  answer IS read, through its flags — staged with another setpoint than
+  the one sent and another fan speed than the unit's, under the
+  setpoint's flag alone, the model takes that setpoint and keeps its
+  fan speed; after a group or a power write the members hold what was
+  sent. An INVESTIGATION that needs the unit's verdict on a write waits
+  until `LastTimeStamp` has moved (seconds when MELCloud reads the unit
+  online, up to its ten-minute cadence otherwise) and reads then: a
+  probe's method, never the product's. What stands OUTSIDE the rule,
+  read in the code on 2026-11-23 and stated so that nobody takes it for
+  a regression nor copies it onto a unit write:
+  - Frost protection and holiday mode are settings of a building, with
+    neither state nor flags in their answer: they re-read the listing
+    AFTER their POST (`@fetchDevices({ when: 'after' })`), and a facade
+    that does not know yet at which level the setting lives reads it
+    BEFORE the POST (`/FrostProtection/GetSettings`,
+    `/HolidayMode/GetSettings`, once per facade).
+  - The session layer is the core's and serves every request alike. A
+    write that meets a session due for renewal is preceded by the
+    sign-in and the listing every sign-in enforces; a write answered
+    401 is followed by a sign-in, that listing, then ONE replay of the
+    POST. In both the listing lands before the POST's answer, so the
+    model still ends on that answer's flagged fields.
+  - The periodic listing is never brought forward by a write: the core
+    parks it for the write and three seconds more, and it then comes at
+    its own time, the regular sync being how a unit's verdict shows.
 - Because the flags decide, the question is always WHICH FIELDS GET
   FLAGGED — and `updateValues` filters the caller's change set against
   the snapshot before computing them, so **the flag set is always a
@@ -128,8 +171,9 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   there — the rule the official MELCloud app imposes, so it is ours to
   enforce too — and until 57.1.0 it ran after the flags, which meant it
   held only when the caller named both zones and silently failed in the
-  one-zone case it was written for. ATA's clamp is unaffected either
-  way: it only rewrites a field the caller already named.
+  one-zone case it was written for. The ATA setpoint rule is not a
+  derivation at all: it reads what the caller asked, before the filter
+  (`normalizeUpdateData`, in the half-degree bullet below).
 - The snapshot is the write's BODY, so only a sync may write it. A
   group READ (`/Group/Get`) answers MELCloud's state for the GROUP, not
   what each member reports; until 59.2.1 `getGroup()` patched every
@@ -161,8 +205,9 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   sends a whole form that way. That is the first hypothesis to test for
   the "vertical vane keeps resetting to Auto" report (2026-09-04) and
   com.melcloud #1408 ("cooling reverts to 24° every 10 min",
-  2026-07-15) — measured by the delayed re-read above, never by the
-  POST response. Home is unaffected: its PUT carries a real delta and
+  2026-07-15) — measured by a probe that reads once the unit has
+  communicated (above), never by the unflagged echo of a POST. Home is
+  unaffected: its PUT carries a real delta and
   has no flags (live-verified 2026-09-05: a vane write sticks across
   unrelated writes, mode changes and power cycles). The probe scripts
   were investigation artifacts kept out of the repo.
@@ -553,6 +598,26 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   the line outlives the routine traffic that buries a `log`. Only a
   listing sync moves the record: a write's echo merges a partial
   payload and judges nothing.
+  Three corrections of 62.3.1, each reproduced by an independent
+  reading of 62.3.0. The line quotes the stamp and CLAIMS NO DURATION:
+  the predicate judges a building-local stamp against a UTC clock, so a
+  building west of UTC reads a day of silence after thirteen (UTC-11)
+  to twenty-three (the Azores) hours of it, and "over 24 h" was false
+  there (availability itself flips at that same instant, as it always
+  did: only the written claim was new). A stamp that CANNOT BE READ
+  still reads as heard from, for the line as for `isAvailable` (no unit
+  is greyed on a stamp nobody can read), so it ends a silent unit's
+  episode; what changed is the WORDING, which claimed "communicates
+  again, last at null" and now says the listing gives no readable date
+  (`readCommunicationSilence`, the three-way reading, tells the
+  reporter which). A first cut of 62.3.1 made such a stamp move nothing
+  for the line alone, and a second independent reading caught what that
+  cost before release: the tile read available again with no line, and
+  greyed again with none, the line and the tile no longer on ONE
+  predicate. The edge is back on it. And the year-one stamp, MELCloud's
+  marker for "never happened" (`isUninitializedWireDate`), is worded
+  ("has never communicated with MELCloud") rather than dated. That the
+  wire puts that marker in `LastTimeStamp` is NOT measured.
 - A unit's OWN fault is a second contract, `FaultAware` (60.5.0):
   `isInError` (Classic `HasError`, Home `isInError`) and `errorMessage`
   (Classic `ErrorMessages`, trimmed; Home the `ErrorCode` entry of the
@@ -672,7 +737,7 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   core's 4 KiB bound (api-core 1.12.0). The engine blanks both tiers the same way,
   case-insensitively, through every seat the one bound engine reaches.
   `PERSONAL_DATA_KEYS` in `src/observability/context.ts` declares
-  thirty keys, in three lots. Nineteen from this SDK's own types
+  thirty-three keys, in three lots. Nineteen from this SDK's own types
   (59.4.0, 59.5.0): Home `/context`'s `givenDisplayName`, `firstname`,
   `lastname`; Classic `/User/ListDevices`'s `DeviceName`,
   `BuildingName`, `AreaName`, `FloorName`, `Zone1Name`, `Zone2Name`,
@@ -712,13 +777,26 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   Never turn that around into a list of the parents where `name` IS
   personal: the Classic building sits at the root of its listing,
   where nothing encloses it.
-  Six on the key's NAME alone, each read `null` or empty on the
+  Nine on the key's NAME alone, each read `null` or empty on the
   accounts measured, so what they carry when set is not known:
   `CustomerName`, `BuildingAddress`, `BuildingCity` (the energy
   report), `Owner` (a building's owner record, of unknown shape; a
-  number on a unit) and `ListPendingInvite`,
-  `ListOwnershipChangeRequest` (the sign-in answer). Blanking a key
-  that carries nothing costs nothing.
+  number on a unit), `ListPendingInvite`,
+  `ListOwnershipChangeRequest` (the sign-in answer) and, since 62.3.1,
+  `Scene`, `SceneOwner` (a device read) and `WeatherForecast`, which
+  carries what `WeatherObservations` does in the same body. Blanking a
+  key that carries nothing costs a reader one thing, which the second
+  reading of 62.3.1 named: the engine writes the mask over a `null`
+  too, so a dump no longer tells a scene that is SET from none, on a
+  unit whose setpoint "comes back". Printing a `null` as `null` under a
+  blanked key would give that back at no cost to privacy; it is the
+  engine's to decide (api-core), for every key and both SDKs at once,
+  and is not done here. The same reading listed two
+  keys the wire names a SECRET by, `Passcode` (a device read) and
+  `RandomKey` (the sign-in answer): they joined the credential tier in
+  62.3.1, on their name too. The five were in the measure's own output
+  and the first pass decided nothing on them; an independent reading
+  found them there.
   KEPT, as trades: `SerialNumber`, a unique device identifier but not
   observable on the network, and the figure a report and the owner name
   the unit by; the account and unit ids and the country, what a report
@@ -969,46 +1047,83 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   `CanSetTemperatureIncrementOverride`: a device PERMISSION, never a
   step declaration — reading it as a step would be wrong, and its
   absence from the public surface remains a verdict, not a gap.
-- An ATA setpoint is ROUNDED to that step before it is clamped, on
-  both dialects (62.3.0), because a unit holds a setpoint on its step
-  and nothing else. Measured by writes on one half-degree unit of each
-  dialect on 2026-11-23 (the owner's go, each unit restored). Classic
-  DROPS an off-step value: `18.4` answered `200`, echoed and listed as
-  `18.4` until the unit next communicated (8 min 18 s later, the unit
-  reporting every ten minutes that evening), then the listing read
-  `18`, the setpoint held before; `18.5` written next was held. The
-  field report behind it (com.melcloud, the same day): an automation
-  lowering a target by 0.4 °C every half hour, re-sent every four
-  minutes, of which only the whole degrees landed — `16.4` read back as
-  `18`, `15.6` and `15.2` as `16`, six read-back lines in 86 minutes —
-  read by its owner as "reverts to an old setting". Home ROUNDS it
-  itself, late: `20.6` read `20.5` a minute later, `20.8` read `21`,
-  `20.25` read `20` (a tie ended on the whole degree), and `20.75`
-  still read `20.75` after two and a half minutes on a unit holding
-  `21`: what the wire answers is the last write until the unit reports
-  a CHANGE, so a value that rounds to the setpoint already held stays
-  on display as written. `roundToStep` (`utils.ts`) is nearest, a tie
-  going UP: one rule for both dialects and for a whole-degree unit,
-  where a tile's half steps make the tie the common case; on Home it
-  moves the `x.25` tie half a degree up from where the unit alone put
-  it, by decision. NOT measured: a whole-degree unit (none at hand; the
-  step is read off the capability the official apps honour) and the
-  ATW zone setpoints, which keep their clamp alone. A Classic listing
-  that does not carry `HasHalfDegreeIncrements` reads as HALF degrees
-  (the type says optional for that reason: nothing validates a unit's
-  listed payload): the eight units read all answer `true`, and read the
-  other way a missing flag would take half degrees away from a unit
-  that holds them, where this reading sends a unit nothing it was not
-  already sent.
-  On Classic the rounding and the clamp are the facade's
-  `normalizeUpdateData`, applied to what the caller ASKED, before the
-  no-change filter: a request the step or the bounds bring back to the
-  setpoint the unit holds is refused with `NoChangesError` and nothing
-  leaves, where the clamp, sitting in `deriveUpdateData` after the
-  filter, used to re-send the held value. `deriveUpdateData` is the
-  ATW's alone now (the companion zone, derived from what CHANGED,
-  flagged before the body is assembled). Pinned on both dialects by
-  `tests/contracts/ata-setpoint-clamp.test.ts`.
+- An ATA setpoint goes on the HALF DEGREE before it is clamped, on
+  both dialects and in a Classic group write (62.3.0, narrowed to this
+  in 62.3.1), because a unit holds a setpoint on its step and nothing
+  else, and every such step lies on the half degree. Measured by writes
+  on one half-degree unit of each dialect on 2026-11-23 (the owner's
+  go, each unit restored). Classic DROPS an off-step value: `18.4`
+  answered `200`, echoed and listed as `18.4` until the unit next
+  communicated (8 min 18 s later, the unit reporting every ten minutes
+  that evening), then the listing read `18`, the setpoint held before;
+  `18.5` written next was held. The field report behind it
+  (com.melcloud, the same day): an automation lowering a target by
+  0.4 °C every half hour, re-sent every four minutes, of which only the
+  whole degrees landed — `16.4` read back as `18`, `15.6` and `15.2` as
+  `16`, six read-back lines in 86 minutes — read by its owner as
+  "reverts to an old setting". Home ROUNDS it itself, late: `20.6` read
+  `20.5` a minute later, `20.8` read `21`, `20.25` read `20` (a tie
+  ended on the whole degree), and `20.75` still read `20.75` after two
+  and a half minutes on a unit holding `21`: what the wire answers is
+  the last write until the unit reports a CHANGE, so a value that
+  rounds to the setpoint already held stays on display as written.
+  `toAtaSetpoint` (`temperature-range.ts`) is the ONE writer's rule:
+  nearest half degree, a tie going UP (`roundToStep`), then the bounds;
+  on Home it moves the `x.25` tie half a degree up from where the unit
+  alone put it, by decision (one rule for both dialects).
+  THE GRID IS THE HALF DEGREE FOR EVERY UNIT, a unit that advertises
+  whole degrees included, and that is a retreat: 62.3.0 rounded to the
+  unit's own `temperatureStep`, and an independent reading the same day
+  reproduced what that does to com.melcloud.extension on a whole-degree
+  unit. The extension computes its target on a hard-coded half-degree
+  grid and reads any tile value that is not its target as a change made
+  by hand: `23.5` asked, `24` sent, `24` read back, `24` recorded as the
+  user's comfort setpoint, which then ratchets up a degree at a time.
+  No whole-degree unit could be measured, and no host can learn a
+  unit's step through Homey today (com.melcloud publishes none as a
+  capability option), so a whole-degree rounding has to arrive WITH its
+  hosts: the app publishing the step, the extension reading it. Until
+  then such a unit is sent half degrees as before; what it does with
+  one is NOT measured (the extension's own half steps on such a unit,
+  re-sent after each drop, would fit com.melcloud #1408, "cooling
+  reverts to 24° every 10 min", at the ten-minute cadence measured
+  above: a hypothesis, the report was not re-read against it).
+  `temperatureStep` stays a READ on both ATA facades (Classic since
+  62.3.0, from `HasHalfDegreeIncrements`; a listing that does not carry
+  the flag reads as half degrees, the type saying optional because
+  nothing validates a unit's listed payload). NOT measured either: the
+  ATW zone setpoints, which keep their clamp alone, and the Classic
+  GROUP endpoint, whose state is put on the half degree all the same
+  (`toWireGroupState`, no bounds: a zone holds units of several ranges)
+  so that the two halves of a combined house are sent one value; the
+  zone facade's decorators read the state the write is GIVEN, which is
+  why `updateGroupState` normalises and hands over to a private
+  `#writeGroupState`.
+  On Classic the rule is the device facade's `normalizeUpdateData`,
+  applied to what the caller ASKED, before the no-change filter: what
+  is compared with the snapshot is what would be SENT. A request the
+  grid or the bounds bring back to the setpoint held is refused with
+  `NoChangesError` and nothing leaves (the clamp, sitting in
+  `deriveUpdateData` after the filter, used to re-send the held value),
+  a setpoint held OUT of its mode's bounds is brought back in when it
+  is asked again, and a mode change whose setpoint comes back to the
+  one held flags the mode alone. That extends the stale-snapshot
+  suppression described above (a request equal to a stale snapshot is
+  not sent) to every request that normalises to it: same class, wider
+  door. `deriveUpdateData` is the ATW's alone now (the companion zone,
+  derived from what CHANGED, flagged before the body is assembled) and
+  it still holds the ATW target-temperature clamp, so AFTER the filter:
+  asking 70 for a tank whose ceiling of 60 the unit already holds
+  re-sends 60, flagged — one redundant POST, nothing wrong on the unit
+  (reproduced by the second reading of 62.3.1, left as it is there).
+  Moving that clamp before the filter, like the ATA rule, is the natural
+  follow-up, with ONE trap to mind: its `data[key] ?? range.min`
+  fallback is dead only because the filter has already dropped every
+  `undefined` key, so moved as written it would send the MINIMUM for a
+  present-`undefined` key.
+  Pinned on both dialects by `tests/contracts/ata-setpoint-clamp.test.ts`
+  (the grid, the unclamped case, the three no-change refusals, the
+  flags) and, for the group write, by `classic-facades.test.ts`.
 - `resumeSession()` judges by the SIGN-IN ROUND-TRIP, never by the
   session — because two different failures both leave a live session
   standing, and only the round-trip separates them. An ACCEPTED
