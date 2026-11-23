@@ -17,9 +17,7 @@ import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type AtaTemperatureBounds,
   type TemperatureRange,
-  ataTemperatureStep,
   rangeForHomeMode,
-  toAtaSetpoint,
 } from '../temperature-range.ts'
 import {
   type ClassicGroupState,
@@ -32,6 +30,7 @@ import {
 } from '../types/index.ts'
 import { resolved } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
+import { ataTemperatureStep, toAtaSetpoint } from './ata-setpoint.ts'
 import {
   homeGroupMemberModes,
   toClassicAtaGroupState,
@@ -273,8 +272,8 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
 
   /**
    * Pushes a partial ATA setpoint update — the base pipeline narrowed
-   * to the ATA payload, with `setTemperature` clamped to the active
-   * mode's bounds.
+   * to the ATA payload, with `setTemperature` put on the half degree,
+   * then within the active mode's bounds.
    * @param values - Partial setpoint payload.
    * @throws A {@link NoChangesError} when `values` carries no defined value.
    */

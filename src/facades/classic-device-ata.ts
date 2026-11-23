@@ -7,9 +7,7 @@ import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type AtaTemperatureBounds,
   type TemperatureRange,
-  ataTemperatureStep,
   rangeForHomeMode,
-  toAtaSetpoint,
 } from '../temperature-range.ts'
 import {
   type ClassicEnergyDataAta,
@@ -20,6 +18,7 @@ import {
 } from '../types/index.ts'
 import { isValue, resolved } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
+import { ataTemperatureStep, toAtaSetpoint } from './ata-setpoint.ts'
 import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
 import { classicGroupMemberModes, toGroupFanSpeed } from './home-ata-group.ts'
@@ -70,8 +69,8 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   /**
    * Setpoint granularity in °C, from the unit's advertised
    * half-degree capability. A listing that does not say reads as half
-   * degrees: what every unit measured answers, and the one reading
-   * that can only send a unit what it was already sent.
+   * degrees, what every unit measured answers. A read and no more: a
+   * write goes on the half degree whatever the unit advertises.
    * @returns `1` on a unit that says it holds whole degrees only,
    * `0.5` otherwise.
    */

@@ -319,6 +319,36 @@ describe('mELCloud Classic API', () => {
         ],
       ])
     })
+
+    // A stamp that cannot be read reads as heard from, so the tile is
+    // available again: the line says so without claiming a date.
+    it.each(['not a date', ''])(
+      'says the listing carries no date when a silent unit answers the stamp %j',
+      async (unreadable) => {
+        const logger = createLogger()
+        mockRequest.mockResolvedValue(
+          mockHttpResponse(listingWith(silentSince(200))),
+        )
+        const api = await createApi({ logger })
+        await api.fetch()
+        mockRequest.mockResolvedValue(mockHttpResponse(listingWith(unreadable)))
+        await api.fetch()
+
+        expect(logger.error).toHaveBeenCalledTimes(1)
+        expect(
+          vi
+            .mocked(logger.log)
+            .mock.calls.filter(([, line]) =>
+              String(line).includes('last communication'),
+            ),
+        ).toStrictEqual([
+          [
+            '[Classic]',
+            `ATA unit 7: MELCloud's listing gives no readable date for its last communication (${JSON.stringify(unreadable)}); it reads available`,
+          ],
+        ])
+      },
+    )
   })
 
   describe('the dropped-device report', () => {

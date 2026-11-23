@@ -291,7 +291,7 @@ A write throws one of the errors below, or the network failure itself. All but `
 
 ### Logs and events
 
-`logger` takes any object with `log` and `error`, and defaults to `console`. The client logs each request and each response through `log` (the MELCloud Home sign-in exchange apart) and failures through `error`, prefixed `[Classic]` or `[Home]`. In those lines, and in the request and response a thrown `HttpError` carries, credentials and personal data read `******`: tokens, passwords, email addresses, device names, the account holder's name, postal addresses, coordinates, MAC and IP addresses. Building, floor and area names stay readable.
+`logger` takes any object with `log` and `error`, and defaults to `console`. The client logs each request and each response through `log` (the MELCloud Home sign-in exchange apart) and failures through `error`, prefixed `[Classic]` or `[Home]`. In those lines, and in the request and response a thrown `HttpError` carries, credentials and personal data read `******`: tokens, passwords, email addresses, the account holder's name, the names given to devices, buildings, floors and areas, postal addresses, coordinates, MAC and IP addresses.
 
 `events` takes callbacks: `onRequestStart`, `onRequestComplete`, `onRequestRetry` and `onRequestError` around each request, `onSyncComplete`, `onAuthenticationLost` and `onAuthenticationRestored`. A callback that throws is ignored.
 

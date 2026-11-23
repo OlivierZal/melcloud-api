@@ -6,7 +6,6 @@ import type {
 import { type ClassicOperationMode, ClassicDeviceType } from '../constants.ts'
 import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
 import { assertUpdateAccepted } from '../errors/index.ts'
-import { toAtaSetpoint } from '../temperature-range.ts'
 import {
   type ClassicGroupState,
   type ClassicSetGroupPostData,
@@ -14,6 +13,7 @@ import {
   mapResult,
 } from '../types/index.ts'
 import type { ClassicZoneFacade } from './classic-types.ts'
+import { toAtaSetpoint } from './ata-setpoint.ts'
 import { ClassicBaseFacade } from './classic-base.ts'
 import { classicGroupMemberModes } from './home-ata-group.ts'
 

@@ -6,6 +6,7 @@ import {
   type ClassicCommunicationEvent,
   type ClassicDeviceAny,
   ClassicRegistry,
+  readCommunicationSilence,
 } from '../entities/index.ts'
 import { resolveErrorLogWindow } from '../error-log.ts'
 import {
@@ -970,12 +971,18 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   // UTC clock, a building west of UTC reads a day of silence after
   // thirteen to twenty-three hours of it. The year-one stamp is
   // MELCloud's marker for "never happened", worded rather than dated.
+  // A stamp that cannot be read reads as heard from, like every stamp
+  // the predicate cannot judge, so it ends a silent unit's episode: the
+  // line then says the listing carries no date, never that the unit
+  // "communicates again" at a date nobody can read.
   #reportCommunication({ transition, unit }: ClassicCommunicationEvent): void {
     const subject = describeUnit(unit)
     const { kind, lastTimestamp } = transition
     if (kind === 'resumed') {
       this.logger.log(
-        `${subject} communicates with MELCloud again, last at ${lastTimestamp} (building time); it reads available`,
+        readCommunicationSilence(lastTimestamp) === null
+          ? `${subject}: MELCloud's listing gives no readable date for its last communication (${JSON.stringify(lastTimestamp)}); it reads available`
+          : `${subject} communicates with MELCloud again, last at ${lastTimestamp} (building time); it reads available`,
       )
       return
     }

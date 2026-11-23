@@ -105,7 +105,10 @@ const EXTRA_SENSITIVE_KEYS = [
 // undecided: `Scene` and `SceneOwner` (a device read: a scene is
 // something its owner named) and `WeatherForecast`, which carries what
 // `WeatherObservations` does, in the same body. Blanking a key that
-// carries nothing costs nothing.
+// carries nothing costs a reader one thing: the engine writes the
+// mask over a `null` too, so a dump no longer tells a scene that is
+// set from none. Whether a `null` should print as `null` is the
+// engine's to decide, for every key at once.
 // EXCLUDED, by decision:
 // - `SerialNumber`: a unique device identifier too, kept as a trade —
 //   it is not observable on the network, and it is the figure a report

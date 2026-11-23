@@ -277,8 +277,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   // computed: deriving a companion field from the ones that changed. A
   // derived field must be flagged like the named ones or the unit
   // drops it, which is why this runs before `#computeFlags` while
-  // `prepareUpdateData` only assembles the body afterwards. Absent on a
-  // device type that derives nothing.
+  // `prepareUpdateData` only assembles the body afterwards. The one
+  // type that has such a rule, air-to-water, also bounds its target
+  // temperatures here, so AFTER the no-change filter: a request beyond
+  // a bound the unit already sits on is sent again as that bound,
+  // flagged. Absent on a device type that derives nothing.
   protected readonly deriveUpdateData?: (
     data: Partial<ClassicUpdateDeviceData<T>>,
   ) => Partial<ClassicUpdateDeviceData<T>>
@@ -367,12 +370,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
    * degree and within its mode's bounds); the set is then reduced to
    * the fields that differ from the last synced state — a key that is
    * `undefined`, or unknown to the device type, counts as absent —
-   * and a per-type rule may add a companion field (the other zone of
-   * an air-to-water unit). Only the resulting fields are flagged for
-   * the unit to apply; the body carries the rest of the synced state
-   * around them, and no read precedes the write. The registry model
-   * then takes the fields the answer flags, and the sync notification
-   * fires.
+   * and a per-type rule may then add a companion field or bound a
+   * value (the other zone and the target temperatures of an
+   * air-to-water unit). Only the resulting fields are flagged for the
+   * unit to apply; the body carries the rest of the synced state
+   * around them. One request is sent: no read precedes the write and
+   * none follows it. The registry model takes from the answer the
+   * fields its flags mark, and the sync notification fires.
    * @param data - Fields to change.
    * @returns MELCloud's answer to the write.
    * @throws A {@link NoChangesError} when no field differs from the

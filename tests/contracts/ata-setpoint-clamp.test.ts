@@ -247,8 +247,9 @@ describeAtaSetpointClampContract(
     ),
 )
 
-// The step the rounding reads is a read of its own on both dialects,
-// from the half-degree capability each API advertises.
+// The step a unit advertises is a read on both dialects, from the
+// half-degree capability each API carries. No write depends on it:
+// every setpoint goes on the half degree.
 describe('ataSetpointClamp — the step a unit advertises', () => {
   beforeEach(resetHomeDevices)
 
@@ -275,10 +276,8 @@ describe('ataSetpointClamp — the step a unit advertises', () => {
 })
 
 // Nothing validates a Classic unit's listed payload, so the capability
-// can be missing where Home's schema requires it. Read as a whole-degree
-// unit, such a listing would take half degrees away from a unit that
-// holds them; read as half degrees, it sends a unit nothing it was not
-// already sent.
+// can be missing where Home's schema requires it. Such a listing reads
+// as half degrees, what every unit measured answers.
 describe('ataSetpointClamp — a Classic listing that does not advertise its step', () => {
   it('reads as half degrees', async () => {
     const registry = populatedClassicRegistry({
