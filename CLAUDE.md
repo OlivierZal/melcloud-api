@@ -123,20 +123,36 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   flagged fields), a power write and a group write (MELCloud only
   acknowledges them, so the member models take what was sent).
   `tests/contracts/classic-write-wire.test.ts` pins both halves where
-  they matter, on the transport. One: each of the three is one request,
-  a write that changes nothing none at all, so a read added by any route
-  (a decorator, a helper, a new adapter call) fails the suite. Two: the
+  they matter, on the transport. One: each of the three is one request
+  (an air-to-water unit's route included), a write that changes nothing
+  none at all, and nothing leaves in the ten minutes that follow, so a
+  read added by any route (a decorator, a helper, a new adapter call, a
+  timer that waits for the unit to settle) fails the suite. Two: the
   answer IS read, through its flags — staged with another setpoint than
   the one sent and another fan speed than the unit's, under the
   setpoint's flag alone, the model takes that setpoint and keeps its
-  fan speed. Two writes are of another kind and DO re-read
-  the listing afterwards (`@fetchDevices({ when: 'after' })`): frost
-  protection and holiday mode, settings of a building whose answer
-  carries neither state nor flags. An INVESTIGATION that needs the
-  unit's verdict on a write waits until `LastTimeStamp` has moved
-  (seconds when MELCloud reads the unit online, up to its ten-minute
-  cadence otherwise) and reads then: a probe's method, never the
-  product's.
+  fan speed; after a group or a power write the members hold what was
+  sent. An INVESTIGATION that needs the unit's verdict on a write waits
+  until `LastTimeStamp` has moved (seconds when MELCloud reads the unit
+  online, up to its ten-minute cadence otherwise) and reads then: a
+  probe's method, never the product's. What stands OUTSIDE the rule,
+  read in the code on 2026-11-23 and stated so that nobody takes it for
+  a regression nor copies it onto a unit write:
+  - Frost protection and holiday mode are settings of a building, with
+    neither state nor flags in their answer: they re-read the listing
+    AFTER their POST (`@fetchDevices({ when: 'after' })`), and a facade
+    that does not know yet at which level the setting lives reads it
+    BEFORE the POST (`/FrostProtection/GetSettings`,
+    `/HolidayMode/GetSettings`, once per facade).
+  - The session layer is the core's and serves every request alike. A
+    write that meets a session due for renewal is preceded by the
+    sign-in and the listing every sign-in enforces; a write answered
+    401 is followed by a sign-in, that listing, then ONE replay of the
+    POST. In both the listing lands before the POST's answer, so the
+    model still ends on that answer's flagged fields.
+  - The periodic listing is never brought forward by a write: the core
+    parks it for the write and three seconds more, and it then comes at
+    its own time, the regular sync being how a unit's verdict shows.
 - Because the flags decide, the question is always WHICH FIELDS GET
   FLAGGED — and `updateValues` filters the caller's change set against
   the snapshot before computing them, so **the flag set is always a

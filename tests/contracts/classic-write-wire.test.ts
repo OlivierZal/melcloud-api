@@ -3,7 +3,7 @@ import {
   defined,
   mockHttpResponse,
 } from '@olivierzal/api-core/testing'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type {
   ClassicBuildingFacade,
@@ -18,6 +18,7 @@ import {
   assertClassicDeviceType,
   CLASSIC_LIST_PATH,
   classicAtaDeviceData,
+  classicAtwDeviceData,
   classicBuildingId,
   classicBuildingWithStructure,
   classicDeviceId,
@@ -45,9 +46,14 @@ const { client, requestSpy } = createMockHttpClient(
 const DEVICE_WRITE_PATH = '/Device/SetAta'
 const GROUP_WRITE_PATH = '/Group/SetAta'
 const POWER_WRITE_PATH = '/Device/Power'
+const WATER_DEVICE_WRITE_PATH = '/Device/SetAtw'
+
+// As long as a unit can take to communicate after a write.
+const TEN_MINUTES_MS = 600_000
 
 const BUILDING_ID = 1
 const UNIT_ID = 7
+const WATER_UNIT_ID = 8
 const SYNCED_FAN_SPEED = 3
 const SYNCED_SETPOINT = 21
 const ANSWERED_FAN_SPEED = 5
@@ -68,6 +74,12 @@ const listing = (): unknown => [
             SetTemperature: SYNCED_SETPOINT,
           }),
           DeviceID: UNIT_ID,
+        }),
+        classicRawDevice({
+          BuildingID: BUILDING_ID,
+          Device: classicAtwDeviceData({ ForcedHotWaterMode: false }),
+          DeviceID: WATER_UNIT_ID,
+          Type: ClassicDeviceType.Atw,
         }),
       ],
       Floors: [],
@@ -99,6 +111,7 @@ const sentRequests = (): string[] =>
 const facades = async (): Promise<{
   building: ClassicBuildingFacade
   unit: ClassicDeviceFacade<typeof ClassicDeviceType.Ata>
+  waterUnit: ClassicDeviceFacade<typeof ClassicDeviceType.Atw>
 }> => {
   const api = await ClassicAPI.create({
     password: 'pass',
@@ -110,21 +123,34 @@ const facades = async (): Promise<{
   const manager = new ClassicFacadeManager(api)
   const unit = defined(api.registry.devices.getById(classicDeviceId(UNIT_ID)))
   assertClassicDeviceType(unit, ClassicDeviceType.Ata)
+  const waterUnit = defined(
+    api.registry.devices.getById(classicDeviceId(WATER_UNIT_ID)),
+  )
+  assertClassicDeviceType(waterUnit, ClassicDeviceType.Atw)
   const building = defined(
     api.registry.buildings.getById(classicBuildingId(BUILDING_ID)),
   )
   // What signing in and listing sent belongs to the session, not to
   // the write under test.
   requestSpy.mockClear()
-  return { building: manager.get(building), unit: manager.get(unit) }
+  return {
+    building: manager.get(building),
+    unit: manager.get(unit),
+    waterUnit: manager.get(waterUnit),
+  }
 }
 
 describe('a MELCloud Classic write on the wire', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     stageClassicWire(requestSpy, {
       login: () => classicLoginResponse(),
       rest: (config) => mockHttpResponse(answer(config)),
     })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('sends a device write as one POST and reads nothing', async () => {
@@ -135,20 +161,49 @@ describe('a MELCloud Classic write on the wire', () => {
     expect(sentRequests()).toStrictEqual([`post ${DEVICE_WRITE_PATH}`])
   })
 
-  it('sends a group write as one POST and reads nothing', async () => {
-    const { building } = await facades()
+  // The route of another device type, where a per-type rule (the
+  // companion zone) is the natural seat of a "fresh read".
+  it('sends an air-to-water device write as one POST and reads nothing', async () => {
+    const { waterUnit } = await facades()
+
+    await waterUnit.updateValues({ ForcedHotWaterMode: true })
+
+    expect(sentRequests()).toStrictEqual([`post ${WATER_DEVICE_WRITE_PATH}`])
+  })
+
+  // A read that waited for the unit to settle would be a read all the
+  // same. The periodic listing is off here, so nothing is due however
+  // long the clock runs.
+  it('reads nothing in the ten minutes that follow a device write', async () => {
+    const { unit } = await facades()
+
+    await unit.updateValues({ SetTemperature: SYNCED_SETPOINT + 1 })
+    await vi.advanceTimersByTimeAsync(TEN_MINUTES_MS)
+
+    expect(sentRequests()).toStrictEqual([`post ${DEVICE_WRITE_PATH}`])
+  })
+
+  // MELCloud only acknowledges a group or a power write: the members
+  // take what was sent, from no other source.
+  it('sends a group write as one POST, its members taking what was sent', async () => {
+    const { building, unit } = await facades()
 
     await building.updateGroupState({ SetTemperature: SYNCED_SETPOINT + 1 })
 
     expect(sentRequests()).toStrictEqual([`post ${GROUP_WRITE_PATH}`])
+    expect(unit.data.SetTemperature).toBe(SYNCED_SETPOINT + 1)
   })
 
-  it('sends a power write as one POST and reads nothing', async () => {
-    const { building } = await facades()
+  it('sends a power write as one POST, its members taking what was sent', async () => {
+    const { building, unit, waterUnit } = await facades()
 
     await building.updatePower(false)
 
     expect(sentRequests()).toStrictEqual([`post ${POWER_WRITE_PATH}`])
+    expect([unit.data.Power, waterUnit.data.Power]).toStrictEqual([
+      false,
+      false,
+    ])
   })
 
   // MELCloud answers a device write with every field of the body it
