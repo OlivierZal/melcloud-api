@@ -96,8 +96,12 @@ describe.concurrent('the personal-data tier', () => {
     'AddressLine1',
     'AddressLine2',
     'AreaName',
+    'BuildingAddress',
+    'BuildingCity',
     'BuildingName',
     'City',
+    'connectedInterfaceIdentifier',
+    'CustomerName',
     'DeviceName',
     'District',
     'firstname',
@@ -105,11 +109,18 @@ describe.concurrent('the personal-data tier', () => {
     'givenDisplayName',
     'lastname',
     'Latitude',
+    'ListOwnershipChangeRequest',
+    'ListPendingInvite',
     'LocalIPAddress',
     'Longitude',
     'MacAddress',
+    'MapLatitude',
+    'MapLongitude',
+    'name',
+    'Owner',
     'OwnerName',
     'Postcode',
+    'WeatherObservations',
     'Zone1Name',
     'Zone2Name',
   ])('marks the personal-data key %s sensitive in any casing', (key) => {
@@ -125,17 +136,129 @@ describe.concurrent('the personal-data tier', () => {
   })
 
   // The exclusions are verdicts, pinned so a future "blank everything
-  // that looks personal" sweep has to argue with them: `name` is a
-  // Home setting's key before it is a building's, and the serial and
-  // the vendor ids are how a report names a unit.
-  it.each(['name', 'Name', 'SerialNumber', 'TimeZoneCity', 'DeviceID', 'id'])(
-    'leaves the setting or identifier key %s alone',
+  // that looks personal" sweep has to argue with them: the serial and
+  // the vendor ids are how a report names a unit, and a building's
+  // `Location` shares its name with the HTTP header a sign-in diagnosis
+  // reads.
+  it.each(['SerialNumber', 'TimeZoneCity', 'DeviceID', 'id', 'Location'])(
+    'leaves the identifier key %s alone',
     (key) => {
       expect(redaction.isSensitive(key)).toBe(false)
     },
   )
 
-  it('blanks the display names and the account holder in a Home /context dump, never a setting name', () => {
+  // `name` is a person's entry everywhere but one seat: MELCloud Home
+  // spells a device SETTING's name with the same word, and a dump with
+  // its setting names blanked diagnoses nothing.
+  it('blanks a name everywhere but under the settings of a unit', () => {
+    expect(
+      redaction.redactValue({
+        buildings: [
+          {
+            airToAirUnits: [{ settings: [{ name: 'Power', value: 'True' }] }],
+            airToWaterUnits: [
+              {
+                settings: [{ name: 'OperationModeZone1', value: 'HeatCurve' }],
+              },
+            ],
+            name: 'Home',
+          },
+        ],
+        scenes: [{ name: 'Evening' }],
+      }),
+    ).toStrictEqual({
+      buildings: [
+        {
+          airToAirUnits: [{ settings: [{ name: 'Power', value: 'True' }] }],
+          airToWaterUnits: [
+            { settings: [{ name: 'OperationModeZone1', value: 'HeatCurve' }] },
+          ],
+          name: REDACTED,
+        },
+      ],
+      scenes: [{ name: REDACTED }],
+    })
+  })
+
+  // The answer to a Classic sign-in is small, so it is printed whole at
+  // every sign-in: the account holder's name and the position of the
+  // account's map rode it in clear into a diagnostic report.
+  it('blanks the account holder and the map position in a Classic sign-in dump', () => {
+    const call = new APICallResponseData(
+      {
+        data: {
+          ErrorId: null,
+          ListOwnershipChangeRequest: [{ RequestedBy: 'John Roe' }],
+          ListPendingInvite: [{ InvitedBy: 'John Roe' }],
+          LoginData: {
+            ContextKey: 'ctx',
+            CountryName: 'France',
+            Expiry: '2027-01-01T00:00:00',
+            MapLatitude: 48.87,
+            MapLongitude: 2.33,
+            MapZoom: 12,
+            Name: 'Jane Doe',
+          },
+        },
+        headers: {},
+        status: 200,
+      },
+      undefined,
+      redaction,
+    )
+
+    expect(parseResponseDump(call)).toStrictEqual({
+      ErrorId: null,
+      ListOwnershipChangeRequest: REDACTED,
+      ListPendingInvite: REDACTED,
+      LoginData: {
+        ContextKey: REDACTED,
+        CountryName: 'France',
+        Expiry: '2027-01-01T00:00:00',
+        MapLatitude: REDACTED,
+        MapLongitude: REDACTED,
+        MapZoom: 12,
+        Name: REDACTED,
+      },
+    })
+  })
+
+  // The weather a group read and a device read carry is the building's:
+  // its sunrise and sunset, to the second, place the house.
+  it('blanks the weather of the building and the customer fields of a Classic report', () => {
+    expect(
+      redaction.redactValue({
+        BuildingAddress: '1 rue de la Paix',
+        BuildingCity: 'Paris',
+        BuildingCountry: null,
+        CustomerName: 'Jane Doe',
+        Data: {
+          Group: {
+            State: { SetTemperature: 20 },
+            WeatherObservations: [
+              {
+                ConditionName: 'Sunny',
+                Sunrise: '2026-11-23T08:10:00',
+                Sunset: '2026-11-23T17:02:00',
+              },
+            ],
+          },
+        },
+        Owner: { Name: 'John Roe' },
+      }),
+    ).toStrictEqual({
+      BuildingAddress: REDACTED,
+      BuildingCity: REDACTED,
+      BuildingCountry: null,
+      CustomerName: REDACTED,
+      Data: {
+        Group: { State: { SetTemperature: 20 }, WeatherObservations: REDACTED },
+      },
+      Owner: REDACTED,
+    })
+  })
+
+  it('blanks the names, the adapter identifier and the account holder in a Home /context dump, never a setting name', () => {
     const call = new APICallResponseData(
       {
         data: homeContextData({
@@ -154,9 +277,11 @@ describe.concurrent('the personal-data tier', () => {
         {
           airToAirUnits: [
             {
+              // A first-generation adapter is addressed by its MAC.
+              connectedInterfaceIdentifier: REDACTED,
               givenDisplayName: REDACTED,
               id: 'device-1',
-              // The trade: a setting's `name` is the key a diagnosis reads.
+              // A setting's `name` is the key a diagnosis reads.
               settings: [{ name: 'Power', value: 'True' }],
             },
           ],
@@ -168,8 +293,7 @@ describe.concurrent('the personal-data tier', () => {
             },
           ],
           id: 'building-1',
-          // The trade's other face: the building name rides the same key.
-          name: 'Home',
+          name: REDACTED,
         },
       ],
       email: REDACTED,
@@ -211,7 +335,11 @@ describe.concurrent('the personal-data tier', () => {
         data: [
           {
             ...building,
-            Structure: { Devices: [device], Floors: [{ Name: 'Ground' }] },
+            Structure: {
+              Areas: [{ ID: 3, Name: 'Upstairs' }],
+              Devices: [device],
+              Floors: [{ Areas: [{ ID: 4, Name: 'Attic' }], Name: 'Ground' }],
+            },
           },
         ],
         headers: {},
@@ -230,10 +358,10 @@ describe.concurrent('the personal-data tier', () => {
         ID: 1,
         Latitude: REDACTED,
         Longitude: REDACTED,
-        // The bare `Name` key stays, by the Home setting-name trade.
-        Name: 'Chalet',
+        Name: REDACTED,
         Postcode: REDACTED,
         Structure: {
+          Areas: [{ ID: 3, Name: REDACTED }],
           Devices: [
             {
               AreaName: REDACTED,
@@ -253,7 +381,7 @@ describe.concurrent('the personal-data tier', () => {
               Zone2Name: REDACTED,
             },
           ],
-          Floors: [{ Name: 'Ground' }],
+          Floors: [{ Areas: [{ ID: 4, Name: REDACTED }], Name: REDACTED }],
         },
       },
     ])
@@ -298,7 +426,7 @@ describe.concurrent('the personal-data tier', () => {
             },
           ],
           id: 'building-1',
-          name: 'Home',
+          name: REDACTED,
         },
       ],
       firstname: REDACTED,
