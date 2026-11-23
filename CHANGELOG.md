@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - A `rate-limited` read failure carries the `RateLimitError` it came from as `cause`, as the other kinds of failure carry theirs.
 
+### Changed
+
+- **The reference shows what the clients take from the core.** On a first visit, the generated reference hid the members a client inherits from the core (`authenticate`, `logOut`, `dispose`, `setSyncInterval` and seven more on each of `ClassicAPI` and `HomeAPI`) and every member of the interfaces forwarded from it, such as the request events: the theme hides an external package's members until the reader asks for them. `LifecycleEvents` named the core's type without its callbacks. The core is now part of this reference, and `LifecycleEvents` lists its seven callbacks. Nothing changes in the package.
+
 ### Fixed
 
 - **Below a building, a first frost-protection or holiday-mode write throws `RateLimitError` while requests are paused.** A floor, an area or a single unit of MELCloud Classic reads where the settings live before its first write. While the rate-limit gate held requests, that read was refused and the write threw a plain `Error` (`Could not resolve location: rate-limited`), where every other write throws `RateLimitError` with `retryAfter` and `unblockAt`. The write now throws the gate's own error.

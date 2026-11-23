@@ -48,7 +48,19 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   only for TypeScript-resolved or `{@link !name}` references, and a JSDoc
   block on the export specifier is read only when the symbol has no
   comment of its own — the comment is fixed in api-core (2.3.1 did, for
-  `failureCauseChain`), never worked around here.
+  `failureCauseChain`), never worked around here. The core is NOT
+  external to this reference (`externalPattern` leaves `@olivierzal`
+  out, 62.2.0): the theme hides an external package's members until its
+  reader ticks "External", and under the default pattern that hid, on a
+  first visit, eleven of the members of each client (`authenticate`,
+  `logOut`, `dispose`, `setSyncInterval`…) and every member of the
+  interfaces forwarded from the core (measured 2026-11-23: 514 hidden
+  members, 423 after, what is left being `Error`'s own and Temporal's).
+  `LifecycleEvents` is an alias of the core's generic, which typedoc
+  renders as a name and no more: TypeDoc's `@interface` tag makes it
+  render the seven callbacks. `jsdoc/check-tag-names` reads that tag as
+  JSDoc's (redundant in TypeScript) and has no exemption for it, hence
+  the described disable around that one block.
 
 ## Domain gotchas
 
@@ -1287,9 +1299,10 @@ whenever an overlay changes:
 - `tsconfig.json` `outDir`/`include`; `tsconfig.build.json`
   `outDir`/`rootDir`/`include`.
 - `typedoc.config.js`: the identity (name, links, `hostedBaseUrl`,
-  `categoryOrder`, `intentionallyNotExported`) and the
+  `categoryOrder`, `intentionallyNotExported`), the
   `externalSymbolLinkMappings` pointing core symbols at the api-core
-  docs site.
+  docs site and the `externalPattern` that keeps the core's members in
+  this reference.
 
 Do not re-declare family policy locally — a rule evaluation or version
 bump happens in configs, adoption is a reviewed pin bump.
