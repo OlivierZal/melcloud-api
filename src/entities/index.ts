@@ -2,8 +2,14 @@ export type { AvailabilityAware, FaultAware, Identifiable } from './types.ts'
 
 export { ClassicArea } from './area.ts'
 export { ClassicBuilding } from './building.ts'
-export { ClassicDevice } from './classic-device.ts'
-export { ClassicRegistry } from './classic-registry.ts'
+export {
+  type ClassicCommunicationTransition,
+  ClassicDevice,
+} from './classic-device.ts'
+export {
+  type ClassicCommunicationEvent,
+  ClassicRegistry,
+} from './classic-registry.ts'
 export {
   type ClassicBaseBuilding,
   type ClassicBaseDevice,
@@ -19,4 +25,4 @@ export {
   type HomeConnectivityEvent,
   HomeRegistry,
 } from './home-registry.ts'
-export { STALE_COMMUNICATION_HOURS } from './types.ts'
+export { hasStoppedCommunicating, STALE_COMMUNICATION_HOURS } from './types.ts'

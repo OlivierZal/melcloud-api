@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **A MELCloud Classic unit that stops communicating is dated in the log.** A Classic unit reads unavailable once MELCloud has not heard from it for over a day, and nothing was written when that happened: a diagnostic report showed a greyed unit and no way to tell since when. The first listing that stamps a unit's last communication over 24 hours old now writes one error line, `ATA unit 123 has not communicated with MELCloud since 2026-05-03T14:22:00 (building time), over 24 h; it reads unavailable`, a client that starts over a silent unit included, and the first that stamps it fresh again writes `ATA unit 123 communicates with MELCloud again, last at … (building time); it reads available`. The unit is named by type and id, never by its name, and the stamp is the listing's own, on the building's clock. `ClassicRegistry.syncDevices` answers those edges (`ClassicCommunicationEvent`), as `HomeRegistry.syncDevices` answers the connectivity ones, and `hasStoppedCommunicating` is the predicate `isAvailable` reads.
+
 ### Changed
 
 - **The exact `@olivierzal/api-core` pin advances from 2.4.3 to 2.5.0.** It brings the option the fix below needs: a personal-data key can keep its value under the one parent where it names something else.

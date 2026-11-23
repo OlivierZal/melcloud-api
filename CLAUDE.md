@@ -531,6 +531,28 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   the cross-dialect `isAvailable` contract (Classic: 24 h staleness;
   Home: the `/context` `isConnected` flag) — consumers must never map
   the raw `Offline` flag to anything (com.melcloud #1479/#1481).
+- Classic communication lines are EDGES too (62.3.0), the twin of the
+  Home connectivity lines below. A com.melcloud report of 2026-11-23
+  showed a unit greyed as "not communicating" and nothing to date it:
+  the listing body is over the core's 4 KiB bound, so `LastTimeStamp`
+  never prints, and no line was written when the predicate flipped
+  (its energy history placed the silence in May). `ClassicDevice`
+  remembers the verdict of `hasStoppedCommunicating` — the ONE
+  predicate, in `entities/types.ts`, the facade's `isAvailable` reads —
+  and `trackCommunication()` answers the edge a listing sync crosses:
+  `stale` on the first that reads the stamp over the window old, a unit
+  that JOINS the registry that way included, so a host that starts over
+  a silent unit says so at its first sync; `resumed` on the first that
+  reads it fresh again. The registry collects them
+  (`syncDevices` returns `ClassicCommunicationEvent[]`) and the cycle
+  logs each, the unit by TYPE and ID, the stamp as the wire gave it
+  (building-local wall clock, day-scale reasoning only). `stale` is an
+  ERROR on purpose, and that is what makes an edge enough without a
+  reminder: a Homey report keeps its error stream apart from the
+  hundred lines of stdout (one line in the report above, hours old), so
+  the line outlives the routine traffic that buries a `log`. Only a
+  listing sync moves the record: a write's echo merges a partial
+  payload and judges nothing.
 - A unit's OWN fault is a second contract, `FaultAware` (60.5.0):
   `isInError` (Classic `HasError`, Home `isInError`) and `errorMessage`
   (Classic `ErrorMessages`, trimmed; Home the `ErrorCode` entry of the

@@ -10,6 +10,22 @@ import type {
   ClassicListDeviceDataAny,
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
+import { hasStoppedCommunicating } from './types.ts'
+
+/**
+ * One edge of a Classic unit's communication with MELCloud, as a sync
+ * reports it. `stale` is the first sync that reads the unit's
+ * `LastTimeStamp` older than {@link STALE_COMMUNICATION_HOURS} — a unit
+ * that JOINS the registry that way included, so a host that starts
+ * over a silent unit says so — and `resumed` the first that reads it
+ * fresh again. Both carry the stamp the listing gave, building-local
+ * wall clock. A steady state either way is `null`, not a member.
+ * @category Entities
+ */
+export interface ClassicCommunicationTransition {
+  readonly kind: 'resumed' | 'stale'
+  readonly lastTimestamp: string
+}
 
 /**
  * Concrete device model holding mutable device data that can be partially
@@ -41,6 +57,8 @@ export class ClassicDevice<
 
   readonly #data: ClassicListDeviceData<T>
 
+  #isStale = false
+
   /**
    * Builds a device model from a wire-format {@link ClassicListDevice} entry;
    * the typed `Device` payload is captured by reference for in-place sync.
@@ -68,6 +86,24 @@ export class ClassicDevice<
     this.buildingId = buildingId
     this.floorId = floorId
     this.#data = data
+  }
+
+  /**
+   * Reads the listing's stamp against the staleness predicate the
+   * facade's `isAvailable` reads, and remembers the verdict.
+   * Registry-internal: the registry calls it once per listing sync,
+   * after the payload is merged — a write's echo never moves it.
+   * @returns The communication edge this sync crossed, `null` for a
+   * steady state.
+   */
+  public trackCommunication(): ClassicCommunicationTransition | null {
+    const { LastTimeStamp: lastTimestamp } = this.#data
+    const isStale = hasStoppedCommunicating(lastTimestamp)
+    if (isStale === this.#isStale) {
+      return null
+    }
+    this.#isStale = isStale
+    return { kind: isStale ? 'stale' : 'resumed', lastTimestamp }
   }
 
   /**
