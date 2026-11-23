@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **The exact `@olivierzal/api-core` pin advances from 2.4.3 to 2.5.0.** It brings the option the fix below needs: a personal-data key can keep its value under the one parent where it names something else.
+
+### Fixed
+
+- **Names and positions no longer print in the request and response dumps.** A diagnostic report carried the full name of a MELCloud Classic account holder: the answer to a sign-in is small enough to be printed whole, and its `LoginData.Name` was not blanked. Reading every exchange of an account through the redaction showed more of the kind. Now blanked (`******`), in the dumps and in the `HttpError` snapshot: the account holder's name and the position of the account's map (`MapLatitude`, `MapLongitude`) in the Classic sign-in answer; the names of buildings, floors and areas on Classic and of buildings on Home; the weather at the building that a group read and a device read carry (`WeatherObservations`: its sunrise and sunset place the house); and the identifier MELCloud Home addresses a unit's adapter by (`connectedInterfaceIdentifier`, a MAC address in form on older adapters). Six more keys are blanked on their name alone, having read empty on the accounts measured: `CustomerName`, `BuildingAddress`, `BuildingCity`, `Owner`, `ListPendingInvite` and `ListOwnershipChangeRequest`. The names of a Home unit's settings (`Power`, `OperationMode`…) stay, as do the serial number, the ids and the country. Nothing changes in what the client returns: redaction is applied to what is logged and to thrown errors, never to the data.
+
 ## [62.2.0] - 2026-11-23
 
 ### Added

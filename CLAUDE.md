@@ -650,30 +650,66 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   core's 4 KiB bound (api-core 1.12.0). The engine blanks both tiers the same way,
   case-insensitively, through every seat the one bound engine reaches.
   `PERSONAL_DATA_KEYS` in `src/observability/context.ts` declares
-  nineteen keys: Home `/context`'s `givenDisplayName`, `firstname`,
+  thirty keys, in three lots. Nineteen from this SDK's own types
+  (59.4.0, 59.5.0): Home `/context`'s `givenDisplayName`, `firstname`,
   `lastname`; Classic `/User/ListDevices`'s `DeviceName`,
   `BuildingName`, `AreaName`, `FloorName`, `Zone1Name`, `Zone2Name`,
   `OwnerName`, `AddressLine1`, `AddressLine2`, `City`, `District`,
-  `Postcode`, `Latitude`, `Longitude`; and, since 59.5.0, the network
-  identifiers `MacAddress` and `LocalIPAddress` (Home's `macAddress`
-  rides the same match) — Recital 30 lists IP addresses among the
-  online identifiers (CJEU C-582/14 _Breyer_, for a dynamic public
-  address), the Article 29 Working Party treated a MAC address as
-  personal data (Opinion 13/2011), the LAN address maps the owner's
-  home network, and none of the three serves a diagnosis. The bare
-  `name` key is EXCLUDED
-  by decision: on Home it carries the building name but ALSO every
-  device setting's name (`HomeDeviceSetting.name`, the key `setting()`
-  in `home-base-device.ts` reads), a key is blanked wherever it rides,
-  and blanking it would hide the setting names from the very dump a
-  diagnosis needs — so Home building names and the Classic
-  building/floor/area `Name` entries stay in the dump, a known trade.
-  `SerialNumber` stays too, as a trade like `name`: a unique device
-  identifier, but not observable on the network, and the figure a
-  report and the owner name the unit by. `OwnerEmail`/`email` were
-  already the credential tier's. When a wire field the user types is added, extend THAT list,
-  never a log-site filter; `observability.test.ts` pins the list key
-  by key and the exclusions by name.
+  `Postcode`, `Latitude`, `Longitude`; and the network identifiers
+  `MacAddress` and `LocalIPAddress` (Home's `macAddress` rides the same
+  match) — Recital 30 lists IP addresses among the online identifiers
+  (CJEU C-582/14 _Breyer_, for a dynamic public address), the Article
+  29 Working Party treated a MAC address as personal data (Opinion
+  13/2011), the LAN address maps the owner's home network, and none of
+  the three serves a diagnosis.
+  Five from what real payloads still PRINTED (62.3.0). A com.melcloud
+  report of 2026-11-23 carried the full name of a Classic account
+  holder, so every exchange of one account was read through the bound
+  engine that day, key paths and value shapes only, never a value. It
+  found the bare `name` key (the account holder under
+  `LoginData.Name`, printed whole at every sign-in; a building at the
+  root of the Classic listing and under Home's `buildings` and
+  `guestBuildings`; a Classic floor and area), `MapLatitude` and
+  `MapLongitude` (the account's map, same sign-in answer),
+  `WeatherObservations` (the weather at the building, which
+  `/Group/Get` and `/Device/Get` carry: its sunrise and sunset, to the
+  second, place the house about as well as the coordinates) and
+  `connectedInterfaceIdentifier` (how Home addresses a unit's adapter:
+  twelve hexadecimal digits on four units of five, the form of a MAC
+  address — that it IS the adapter's MAC is not established, none
+  equalled a Classic `MacAddress` on an account whose units are not the
+  same ones).
+  `name` had been EXCLUDED until then, by decision: Home spells a
+  device setting's name with the same word (`HomeDeviceSetting.name`,
+  the key `setting()` in `home-base-device.ts` reads), a key is blanked
+  wherever it rides, and a dump with its setting names blanked
+  diagnoses nothing. api-core 2.5.0 gave the vocabulary a way to take
+  ONE seat back (`notPersonalUnder`), so the word is declared and
+  `NOT_PERSONAL_UNDER` exempts it under `settings` alone: every other
+  `name` either wire grows is blanked until someone argues for it.
+  Never turn that around into a list of the parents where `name` IS
+  personal: the Classic building sits at the root of its listing,
+  where nothing encloses it.
+  Six on the key's NAME alone, each read `null` or empty on the
+  accounts measured, so what they carry when set is not known:
+  `CustomerName`, `BuildingAddress`, `BuildingCity` (the energy
+  report), `Owner` (a building's owner record, of unknown shape; a
+  number on a unit) and `ListPendingInvite`,
+  `ListOwnershipChangeRequest` (the sign-in answer). Blanking a key
+  that carries nothing costs nothing.
+  KEPT, as trades: `SerialNumber`, a unique device identifier but not
+  observable on the network, and the figure a report and the owner name
+  the unit by; the account and unit ids and the country, what a report
+  names a thing by; and a Classic building's `Location` — a number that
+  maps one to one to the building's city on the account measured (five
+  buildings, three cities), so a place at city grain, but the engine
+  matches a key wherever it rides, headers included, and `Location` is
+  the HTTP header a sign-in diagnosis reads. `OwnerEmail`/`email` were
+  already the credential tier's. When a wire field the user types is
+  added, extend THAT list, never a log-site filter;
+  `observability.test.ts` pins the list key by key, the exemption, the
+  kept keys by name, and the dumps of a sign-in, a listing, a
+  `/context` and a group read.
 - **A unit's capability rides a FLAG in a uniform payload, never the
   payload's shape — which is why heatzy-api's type-level fix does not
   cross here.** Every Classic ATW answers the same keys: the Zone 2
@@ -1165,6 +1201,17 @@ token-auth throws `AuthenticationError` for them (a re-rendered login
 page, a chain that lands without a code). The kernel pins the three
 branches; the additive surface (`isAuthFailure`,
 `dispatch(…, { authenticated: false })`) is not seated here.
+
+api-core 2.5.0 (adopted with 62.3.0) adds one option to the redaction
+engine and changes nothing for an SDK that does not pass it:
+`notPersonalUnder`, the enclosing keys under which a personal-data key
+names something else and keeps its value. This repo passes
+`{ settings: ['name'] }` (the personal-data entry under Domain gotchas
+has the measure and the reasons). The mechanism stays the core's: the
+walk carries the nearest enclosing key, the flat seats (headers, query
+pairs, form-encoded pairs) know none and keep the personal reading, and
+an exemption that names a credential or an undeclared key throws when
+the engine is built — at this module's load, so in every suite.
 
 `classifyError` keeps the thrown error on EVERY failure it describes
 (`cause`), the `rate-limited` one included since 62.2.0. The descriptor
