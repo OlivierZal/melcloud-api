@@ -138,7 +138,7 @@ The keys are `username`, `password`, `expiry` and `loginBackoffUntil` for either
 > [!IMPORTANT]
 > The store receives the account password and the session tokens as plain strings. Back it with secure storage.
 
-The client renews the session when it is within 5 minutes of expiry. On a 401, it signs in again once and replays the request once. When the session cannot be recovered, it calls `events.onAuthenticationLost` once, and stops refreshing the devices until `authenticate()` succeeds.
+The client renews the session when it is within 5 minutes of expiry. On a 401, it signs in again once and replays the request once. When only a new sign-in can restore the session, because MELCloud refuses the stored credentials or because a MELCloud Home session ends while no credentials are stored, it calls `events.onAuthenticationLost` once, and stops refreshing the devices until `authenticate()` succeeds.
 
 ### Find devices, buildings and zones
 

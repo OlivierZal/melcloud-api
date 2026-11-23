@@ -6,16 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.2.0] - 2026-11-23
+
 ### Added
 
 - A `rate-limited` read failure carries the `RateLimitError` it came from as `cause`, as the other kinds of failure carry theirs.
 
 ### Changed
 
+- **The exact `@olivierzal/api-core` pin advances from 2.4.2 to 2.4.3.** It brings the MELCloud Home fix below, and nothing else.
 - **The reference shows what the clients take from the core.** On a first visit, the generated reference hid the members a client inherits from the core (`authenticate`, `logOut`, `dispose`, `setSyncInterval` and seven more on each of `ClassicAPI` and `HomeAPI`) and every member of the interfaces forwarded from it, such as the request events: the theme hides an external package's members until the reader asks for them. `LifecycleEvents` named the core's type without its callbacks. The core is now part of this reference, and `LifecycleEvents` lists its seven callbacks. Nothing changes in the package.
 
 ### Fixed
 
+- **A MELCloud Home session that ends while no credentials are stored is announced.** A Home client holding a stored session and no credentials, whose token MELCloud refused, cleared that session, read `isAuthenticated()` `false` and stopped refreshing without a word: `events.onAuthenticationLost` never fired, the cleared session leaving nothing to tell the client from one that had never signed in. The event now fires once, as it does when the stored credentials are refused, and `events.onAuthenticationRestored` follows the next accepted `authenticate()`. MELCloud Classic is unchanged: it keeps its session on a 401, which there can name an endpoint rather than the session.
 - **Below a building, a first frost-protection or holiday-mode write throws `RateLimitError` while requests are paused.** A floor, an area or a single unit of MELCloud Classic reads where the settings live before its first write. While the rate-limit gate held requests, that read was refused and the write threw a plain `Error` (`Could not resolve location: rate-limited`), where every other write throws `RateLimitError` with `retryAfter` and `unblockAt`. The write now throws the gate's own error.
 - **The requests of a MELCloud Home sign-in and session renewal hold to the transport's timeout.** Those requests go out beside the transport, on `fetch`, and carried no limit of the client's own: the `abortSignal` given to `create()` was all that could end one the server never answered. Each of them now takes the transport's limit (`transport: { timeoutMs }`, 30 seconds by default, `0` for none), and the caller's abort still ends it. One that runs past the limit fails as a transport fault does: an automatic sign-in is retried a minute later with no loss announced, and a renewal falls back to the full sign-in.
 
@@ -1117,7 +1121,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.1...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.2.0...HEAD
+[62.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.1...v62.2.0
 [62.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.0...v62.1.1
 [62.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.3...v62.1.0
 [62.0.3]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.2...v62.0.3
