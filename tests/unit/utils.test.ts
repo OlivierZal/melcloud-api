@@ -13,6 +13,7 @@ import {
   mergeHourlyChartResults,
   omitUndefined,
   padHourlyChartToMidnight,
+  roundToStep,
   toEpochMs,
   toUtcWallClock,
   toZonedWallClock,
@@ -98,6 +99,30 @@ describe.concurrent(omitUndefined, () => {
 
   it('returns an empty object when every value is undefined', () => {
     expect(omitUndefined({ temperature: undefined })).toStrictEqual({})
+  })
+})
+
+describe.concurrent(roundToStep, () => {
+  it.each([
+    { expected: 16.5, step: 0.5, value: 16.4 },
+    { expected: 15.5, step: 0.5, value: 15.6 },
+    { expected: 15, step: 0.5, value: 15.2 },
+    { expected: 16.5, step: 0.5, value: 16.5 },
+    { expected: 16, step: 1, value: 16.4 },
+    { expected: 17, step: 1, value: 16.6 },
+  ])(
+    'rounds $value to $expected on a step of $step',
+    ({ expected, step, value }) => {
+      expect(roundToStep(value, step)).toBe(expected)
+    },
+  )
+
+  it.each([
+    { expected: 21, step: 0.5, value: 20.75 },
+    { expected: 20.5, step: 0.5, value: 20.25 },
+    { expected: 17, step: 1, value: 16.5 },
+  ])('sends the tie $value up to $expected', ({ expected, step, value }) => {
+    expect(roundToStep(value, step)).toBe(expected)
   })
 })
 

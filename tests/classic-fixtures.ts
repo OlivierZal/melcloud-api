@@ -161,6 +161,7 @@ export const classicAtaDeviceData = (
     FanSpeed: 3,
     HasAutomaticFanSpeed: true,
     HasError: false,
+    HasHalfDegreeIncrements: true,
     MaxTempAutomatic: 31,
     MaxTempCoolDry: 31,
     MaxTempHeat: 31,

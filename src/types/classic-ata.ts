@@ -95,6 +95,7 @@ export interface ClassicListDeviceDataAta
     > {
   readonly ActualFanSpeed: number
   readonly HasAutomaticFanSpeed: boolean
+  readonly HasHalfDegreeIncrements: boolean
   readonly MaxTempAutomatic: number
   readonly MaxTempCoolDry: number
   readonly MaxTempHeat: number

@@ -273,10 +273,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return this.data.WifiSignalStrength
   }
 
-  // The per-type rules a change set goes through BEFORE its flags are
-  // computed: clamping a field the caller named, deriving a companion
-  // one. A derived field must be flagged like the named ones or the
-  // unit drops it, which is why this runs before `#computeFlags` while
+  // The per-type rule a change set goes through BEFORE its flags are
+  // computed: deriving a companion field from the ones that changed. A
+  // derived field must be flagged like the named ones or the unit
+  // drops it, which is why this runs before `#computeFlags` while
   // `prepareUpdateData` only assembles the body afterwards. Absent on a
   // device type that derives nothing.
   protected readonly deriveUpdateData?: (
@@ -297,6 +297,18 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   protected readonly internalTemperaturesLegend: readonly (
     string | undefined
   )[] = []
+
+  // The per-type reading of what the caller ASKED, applied before
+  // anything is compared: a value the unit cannot hold as given (a
+  // setpoint off its step or out of its bounds) becomes the value it
+  // will hold. It runs before the no-change filter so that a request
+  // for a value that comes back to the one the unit already holds is
+  // refused like any other write that changes nothing, instead of
+  // re-sending it. Absent on a device type that takes every value as
+  // given.
+  protected readonly normalizeUpdateData?: (
+    data: Partial<ClassicUpdateDeviceData<T>>,
+  ) => Partial<ClassicUpdateDeviceData<T>>
 
   protected readonly tableName = 'DeviceLocation'
 
@@ -375,7 +387,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     // one); letting it through would raise a phantom `EffectiveFlags`
     // bit and bypass the `NoChangesError` guard.
     const newData = typedFromEntries<Partial<ClassicUpdateDeviceData<T>>>(
-      Object.entries(data).filter(
+      Object.entries(this.normalizeUpdateData?.(data) ?? data).filter(
         ([key, value]) =>
           value !== undefined &&
           isKnownKey(key) &&

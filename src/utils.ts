@@ -43,6 +43,20 @@ export const clampToRange = (
 ): number => Math.min(Math.max(value, range.min), range.max)
 
 /**
+ * Rounds a value to the nearest multiple of a step, a tie going up.
+ *
+ * A unit holds a setpoint on its own step and nothing else: the ATA
+ * facades of both dialects send it the setpoint a caller asked rounded
+ * this way, where the unit left alone would drop the value (Classic)
+ * or round it a minute later (Home).
+ * @param value - Candidate value.
+ * @param step - The step, strictly positive.
+ * @returns The multiple of `step` nearest to `value`.
+ */
+export const roundToStep = (value: number, step: number): number =>
+  Math.round(value / step) * step
+
+/**
  * Projects a caller-local wall-clock datetime onto the UTC wall clock
  * the Classic wire stores. Malformed input throws, so a write fails
  * before any I/O; a local time a DST transition skips or repeats
