@@ -8,8 +8,8 @@ import {
 import {
   type ClassicDeviceAny,
   ClassicDevice,
+  hasStoppedCommunicating,
   isClassicDeviceOfType,
-  STALE_COMMUNICATION_HOURS,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { Intl, Temporal } from '../temporal.ts'
@@ -233,29 +233,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
    * communicated within roughly the last day. The `Offline` flag is not
    * usable (a ~2-4 min staleness boolean that flaps on healthy units)
    * and `LastTimeStamp` is building-local wall clock, so only day-scale
-   * staleness is trustworthy; an unparsable or future-skewed value
-   * reads available. The staleness anchor is deliberately UTC, not
-   * `api.timezone`: UTC bounds a healthy unit's apparent staleness at
-   * +14 h for ANY host/building timezone pair, while a configured-zone
-   * anchor could reach 26 h cross-zone (e.g. UTC+13 host, UTC-11
-   * building) and wrongly flag a live unit.
+   * staleness is trustworthy; {@link hasStoppedCommunicating} is the
+   * predicate, the one the registry's communication edge reads too.
    * @returns `false` after a day without communication.
    */
   public get isAvailable(): boolean {
-    // The registry lookup stays OUTSIDE the guard: a pruned id must
-    // propagate as EntityNotFoundError like the Home facade does, or a
-    // vanished device would read as reachable. Only the wall-clock parse
-    // is guarded.
-    const { LastTimeStamp: lastTimestamp } = this.data
-    try {
-      return (
-        Temporal.Now.plainDateTimeISO('UTC')
-          .since(Temporal.PlainDateTime.from(lastTimestamp))
-          .total('hours') <= STALE_COMMUNICATION_HOURS
-      )
-    } catch {
-      return true
-    }
+    // The registry lookup stays OUTSIDE the predicate's guard: a pruned
+    // id must propagate as EntityNotFoundError like the Home facade
+    // does, or a vanished device would read as reachable.
+    return !hasStoppedCommunicating(this.data.LastTimeStamp)
   }
 
   /**

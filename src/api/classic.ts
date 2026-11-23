@@ -2,7 +2,12 @@ import { SESSION_REFRESH_AHEAD_MS } from '@olivierzal/api-core/time-units'
 
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
-import { ClassicRegistry } from '../entities/index.ts'
+import {
+  type ClassicCommunicationEvent,
+  type ClassicDeviceAny,
+  ClassicRegistry,
+  STALE_COMMUNICATION_HOURS,
+} from '../entities/index.ts'
 import { resolveErrorLogWindow } from '../error-log.ts'
 import {
   AuthenticationError,
@@ -72,6 +77,10 @@ const deviceTypeNames = {
   [ClassicDeviceType.Erv]: 'Erv',
 } satisfies Record<ClassicDeviceType, string>
 
+// The stale window as the communication lines spell it, from the one
+// constant the facade's `isAvailable` reads.
+const STALE_WINDOW = `${String(STALE_COMMUNICATION_HOURS)} h`
+
 const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const APP_VERSION = '1.38.4.0'
 
@@ -129,6 +138,11 @@ const collectDevices = function* (
     }
   }
 }
+
+// A unit is named by TYPE and ID only, on every line: the name its
+// owner gave it is personal data and never reaches a log.
+const describeUnit = ({ id, type }: ClassicDeviceAny): string =>
+  `${deviceTypeNames[type].toUpperCase()} unit ${String(id)}`
 
 const DROP_REASON_LABELS = {
   'malformed-header': 'malformed header',
@@ -840,7 +854,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       data.flatMap(({ Structure: { Floors: floors } }) => floors),
     )
     this.#registry.syncAreas([...collectAreas(data)])
-    this.#registry.syncDevices([...collectDevices(data)])
+    const events = this.#registry.syncDevices([...collectDevices(data)])
+    for (const event of events) {
+      this.#reportCommunication(event)
+    }
     return data
   }
 
@@ -946,5 +963,25 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       )
     }
     return listing
+  }
+
+  // Edge-triggered: one line, an error, on the first listing that
+  // stamps a unit's last communication over the stale window old — the
+  // predicate the facade's `isAvailable` flips on, so a diagnostic
+  // report can DATE a greyed tile, and a host that starts over a silent
+  // unit says so at its first sync — and one when the listing stamps it
+  // fresh again. The stamp is quoted as the wire gave it: building-local
+  // wall clock, which only day-scale reasoning is safe on.
+  #reportCommunication({ transition, unit }: ClassicCommunicationEvent): void {
+    const subject = describeUnit(unit)
+    if (transition.kind === 'stale') {
+      this.logger.error(
+        `${subject} has not communicated with MELCloud since ${transition.lastTimestamp} (building time), over ${STALE_WINDOW}; it reads unavailable`,
+      )
+      return
+    }
+    this.logger.log(
+      `${subject} communicates with MELCloud again, last at ${transition.lastTimestamp} (building time); it reads available`,
+    )
   }
 }

@@ -21,6 +21,8 @@ export {
   type ClassicBuildingOwner as BuildingOwner,
   type ClassicBuildingWithStructure as BuildingWithStructure,
   type ClassicBuildingZone as BuildingZone,
+  type ClassicCommunicationEvent as CommunicationEvent,
+  type ClassicCommunicationTransition as CommunicationTransition,
   type ClassicDateTimeComponents as DateTimeComponents,
   type ClassicDeviceAny as DeviceAny,
   type ClassicDeviceAtaFacade as DeviceAtaFacade,

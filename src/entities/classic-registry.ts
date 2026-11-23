@@ -16,8 +16,23 @@ import { ClassicDeviceType } from '../constants.ts'
 import type { ClassicDeviceAny } from './classic-types.ts'
 import { ClassicArea, syncArea } from './area.ts'
 import { ClassicBuilding, syncBuilding } from './building.ts'
-import { ClassicDevice, syncDevice } from './classic-device.ts'
+import {
+  type ClassicCommunicationTransition,
+  ClassicDevice,
+  syncDevice,
+} from './classic-device.ts'
 import { ClassicFloor, syncFloor } from './floor.ts'
+
+/**
+ * One communication edge a sync crossed, with the unit that crossed it —
+ * what {@link ClassicRegistry.syncDevices} hands back for the API client
+ * to log.
+ * @category Entities
+ */
+export interface ClassicCommunicationEvent {
+  readonly transition: ClassicCommunicationTransition
+  readonly unit: ClassicDeviceAny
+}
 
 // Upsert + prune: update existing models in-place, create new ones,
 // and remove stale entries. Preserves object identity across syncs
@@ -432,8 +447,12 @@ export class ClassicRegistry {
    * Upserts the device registry and rebuilds the by-building / by-floor /
    * by-area indexes; entries absent from `devices` are pruned.
    * @param devices - Fresh wire-format list-device entries.
+   * @returns The communication edges this sync crossed, in payload
+   * order, empty when every unit held its state.
    */
-  public syncDevices(devices: readonly ClassicListDeviceAny[]): void {
+  public syncDevices(
+    devices: readonly ClassicListDeviceAny[],
+  ): readonly ClassicCommunicationEvent[] {
     const models = syncMap(this.#devices, devices, {
       create: createDeviceModel,
       update: syncDeviceModel,
@@ -457,6 +476,10 @@ export class ClassicRegistry {
       ),
       ({ areaId }) => areaId,
     )
+    return models.flatMap((unit) => {
+      const transition = unit.trackCommunication()
+      return transition === null ? [] : { transition, unit }
+    })
   }
 
   /**

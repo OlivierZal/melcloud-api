@@ -191,6 +191,8 @@ export {
 } from './constants.ts'
 export {
   type AvailabilityAware,
+  type ClassicCommunicationEvent,
+  type ClassicCommunicationTransition,
   type ClassicDeviceAny,
   type ClassicModel,
   type FaultAware,
