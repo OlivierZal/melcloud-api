@@ -7,10 +7,12 @@ import {
   ClassicRegistry,
   isClassicDeviceOfType,
 } from '../../src/entities/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   classicAreaData,
   classicAreaId,
   classicAtaDevice,
+  classicAtaDeviceData,
   classicAtwDevice,
   classicBuildingAreaData,
   classicBuildingData,
@@ -261,6 +263,104 @@ describe('model registry', () => {
         registry.getDevicesByBuildingId(classicBuildingId(999)),
       ).toHaveLength(0)
     })
+  })
+})
+
+// A unit's last communication is building-local wall clock, judged
+// against a UTC anchor at day scale: the stamps below are that far
+// behind now, the way the availability contract builds them.
+const heardFrom = (hoursAgo: number): string =>
+  Temporal.Now.plainDateTimeISO('UTC').subtract({ hours: hoursAgo }).toString()
+
+const unitHeardFrom = (lastTimestamp: string): ClassicListDeviceAny =>
+  classicAtaDevice({
+    Device: classicAtaDeviceData({ LastTimeStamp: lastTimestamp }),
+  })
+
+const emptyRegistry = (): ClassicRegistry =>
+  populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData()],
+    floors: [classicFloorData()],
+  })
+
+describe('the communication edges a device sync answers', () => {
+  it('answers none for a unit heard from within the day', () => {
+    const registry = emptyRegistry()
+
+    expect(registry.syncDevices([unitHeardFrom(heardFrom(1))])).toStrictEqual(
+      [],
+    )
+    expect(registry.syncDevices([unitHeardFrom(heardFrom(23))])).toStrictEqual(
+      [],
+    )
+  })
+
+  it('answers `stale` once for a unit that joins silent for over a day', () => {
+    const registry = emptyRegistry()
+    const lastTimestamp = heardFrom(25)
+
+    const events = registry.syncDevices([unitHeardFrom(lastTimestamp)])
+
+    expect(events).toStrictEqual([
+      {
+        transition: { kind: 'stale', lastTimestamp },
+        unit: registry.devices.getById(1000),
+      },
+    ])
+    expect(registry.syncDevices([unitHeardFrom(lastTimestamp)])).toStrictEqual(
+      [],
+    )
+  })
+
+  it('answers `stale` when a known unit goes silent for over a day', () => {
+    const registry = emptyRegistry()
+    registry.syncDevices([unitHeardFrom(heardFrom(1))])
+    const lastTimestamp = heardFrom(30)
+
+    expect(registry.syncDevices([unitHeardFrom(lastTimestamp)])).toStrictEqual([
+      {
+        transition: { kind: 'stale', lastTimestamp },
+        unit: registry.devices.getById(1000),
+      },
+    ])
+  })
+
+  it('answers `resumed` once when a silent unit is heard from again', () => {
+    const registry = emptyRegistry()
+    registry.syncDevices([unitHeardFrom(heardFrom(48))])
+    const lastTimestamp = heardFrom(0)
+
+    expect(registry.syncDevices([unitHeardFrom(lastTimestamp)])).toStrictEqual([
+      {
+        transition: { kind: 'resumed', lastTimestamp },
+        unit: registry.devices.getById(1000),
+      },
+    ])
+    expect(registry.syncDevices([unitHeardFrom(lastTimestamp)])).toStrictEqual(
+      [],
+    )
+  })
+
+  // The availability contract reads a stamp it cannot parse as a unit
+  // heard from; the edge follows the same predicate.
+  it('answers none for a stamp it cannot read', () => {
+    const registry = emptyRegistry()
+
+    expect(registry.syncDevices([unitHeardFrom('not a date')])).toStrictEqual(
+      [],
+    )
+  })
+
+  // A unit pruned from the listing takes its record with it: listed
+  // again and still silent, it is a unit that joins silent.
+  it('answers `stale` again for a silent unit that left the listing and came back', () => {
+    const registry = emptyRegistry()
+    const lastTimestamp = heardFrom(25)
+    registry.syncDevices([unitHeardFrom(lastTimestamp)])
+    registry.syncDevices([])
+
+    expect(registry.syncDevices([unitHeardFrom(lastTimestamp)])).toHaveLength(1)
   })
 })
 

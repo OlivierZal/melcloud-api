@@ -30,6 +30,28 @@ export const hasOutlivedStaleWindow = (
   STALE_COMMUNICATION_HOURS
 
 /**
+ * Whether a Classic unit's last communication, as its listing stamps
+ * it, is older than {@link STALE_COMMUNICATION_HOURS}: the ONE
+ * predicate behind Classic's `isAvailable` and its `stale`
+ * communication edge, read by the facade on every read and by the
+ * entity on every sync. `LastTimeStamp` is building-local wall clock
+ * and the anchor deliberately UTC, not the configured zone: UTC bounds
+ * a healthy unit's apparent silence at 14 h for any pair of host and
+ * building zones, where a configured-zone anchor could reach 26 h
+ * (a UTC+13 host, a UTC-11 building) and flag a live unit. A stamp
+ * that cannot be read, or one ahead of the clock, reads as heard from.
+ * @param lastTimestamp - The listing's `LastTimeStamp`.
+ * @returns `true` once the unit has been silent for over the window.
+ */
+export const hasStoppedCommunicating = (lastTimestamp: string): boolean => {
+  try {
+    return hasOutlivedStaleWindow(Temporal.PlainDateTime.from(lastTimestamp))
+  } catch {
+    return false
+  }
+}
+
+/**
  * Cross-dialect reachability contract: `true` while MELCloud can deliver writes
  * to the unit.
  * @category Entities

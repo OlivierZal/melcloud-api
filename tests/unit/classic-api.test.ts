@@ -77,6 +77,22 @@ const buildingWith = (devices: readonly unknown[]): unknown => [
   }),
 ]
 
+// A listing whose one unit last communicated that long ago: the stamp
+// is building-local wall clock, judged against a UTC anchor at day
+// scale, the way the availability contract builds it.
+const silentSince = (hoursAgo: number): string =>
+  Temporal.Now.plainDateTimeISO('UTC').subtract({ hours: hoursAgo }).toString()
+
+const listingWith = (lastTimestamp: string, type = 0): unknown =>
+  buildingWith([
+    classicRawDevice({
+      Device: { LastTimeStamp: lastTimestamp },
+      DeviceID: 7,
+      DeviceName: 'Living room',
+      Type: type,
+    }),
+  ])
+
 const errorEntry = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
@@ -226,6 +242,72 @@ describe('mELCloud Classic API', () => {
     await vi.advanceTimersByTimeAsync(RETRY_BUDGET_MS)
     return { logger, result: await pending }
   }
+
+  // A Homey report could not date a greyed Classic tile: nothing was
+  // written when a unit stopped communicating. The listing stamps each
+  // unit's last communication, so the first sync that reads it over a
+  // day old says so — as an error, which a report keeps far longer
+  // than the lines around it — and the first that reads it fresh again
+  // closes the episode.
+  describe('the communication lines', () => {
+    it.each([
+      { label: 'ATA', type: 0 },
+      { label: 'ATW', type: 1 },
+      { label: 'ERV', type: 3 },
+    ])(
+      'dates a silent $label unit by type and id, never by name',
+      async ({ label, type }) => {
+        const lastTimestamp = silentSince(200)
+        const logger = await fetchWithLogger(listingWith(lastTimestamp, type))
+
+        expect(logger.error).toHaveBeenCalledTimes(1)
+        expect(logger.error).toHaveBeenCalledWith(
+          '[Classic]',
+          `${label} unit 7 has not communicated with MELCloud since ${lastTimestamp} (building time), over 24 h; it reads unavailable`,
+        )
+      },
+    )
+
+    it('says nothing of a unit heard from within the day', async () => {
+      const logger = await fetchWithLogger(listingWith(silentSince(2)))
+
+      expect(logger.error).not.toHaveBeenCalled()
+      expect(logger.log).not.toHaveBeenCalledWith(
+        '[Classic]',
+        expect.stringContaining('communicate'),
+      )
+    })
+
+    it('says it once while the unit stays silent, then that it communicates again', async () => {
+      const logger = createLogger()
+      const stale = silentSince(200)
+      mockRequest.mockResolvedValue(mockHttpResponse(listingWith(stale)))
+      const api = await createApi({ logger })
+      await api.fetch()
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+
+      const fresh = silentSince(0)
+      mockRequest.mockResolvedValue(mockHttpResponse(listingWith(fresh)))
+      await api.fetch()
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+      expect(
+        vi
+          .mocked(logger.log)
+          .mock.calls.filter(([, line]) =>
+            String(line).includes('communicates'),
+          ),
+      ).toStrictEqual([
+        [
+          '[Classic]',
+          `ATA unit 7 communicates with MELCloud again, last at ${fresh} (building time); it reads available`,
+        ],
+      ])
+    })
+  })
 
   describe('the dropped-device report', () => {
     it('names the id and the reason of an entry whose type is unmodelled', async () => {
