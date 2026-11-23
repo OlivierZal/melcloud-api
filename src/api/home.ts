@@ -51,7 +51,11 @@ import {
 } from '../validation/index.ts'
 import type { HomeAPIAdapter, HomeAPIConfig } from './home-types.ts'
 import { BaseAPI } from './base.ts'
-import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
+import {
+  type RequestLimits,
+  performTokenAuth,
+  refreshAccessToken,
+} from './token-auth.ts'
 
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
@@ -325,6 +329,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   @setting
   private accessor refreshToken = ''
+
+  // The OIDC flow drives `fetch` itself, beside the transport: each of
+  // its requests takes the transport's limit and this client's abort.
+  get #authLimits(): RequestLimits {
+    return { abortSignal: this.abortSignal, timeoutMs: this.timeoutMs }
+  }
 
   private constructor(config: HomeAPIConfig = {}) {
     const {
@@ -665,12 +675,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     password,
     username,
   }: LoginCredentials): Promise<void> {
-    const request = {
-      credentials: { password, username },
-      ...(this.abortSignal !== undefined && { abortSignal: this.abortSignal }),
-    }
     try {
-      await this.#exchangeAndStoreTokens(request)
+      await this.#exchangeAndStoreTokens({
+        credentials: { password, username },
+        limits: this.#authLimits,
+      })
     } catch (error) {
       // Normalize a transport-level `401 Unauthorized` from the BFF
       // into the shared {@link AuthenticationError} domain type so
@@ -1031,9 +1040,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    */
   async #refreshAccessToken(): Promise<boolean> {
     const tokens = await refreshAccessToken({
+      limits: this.#authLimits,
       logger: this.logger,
       refreshToken: this.refreshToken,
-      ...(this.abortSignal !== undefined && { abortSignal: this.abortSignal }),
     })
     if (tokens === null) {
       return false

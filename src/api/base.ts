@@ -123,6 +123,12 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
     return this.rateLimitGate.isPaused
   }
 
+  /**
+   * The transport's limit on one request, in milliseconds (`0`: none),
+   * for the requests a dialect makes beside the transport.
+   */
+  protected readonly timeoutMs: number
+
   protected constructor(
     config: BaseAPIConfig,
     {
@@ -131,7 +137,18 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
       logLabel,
     }: BaseAPIConstructorOptions,
   ) {
-    const { transport } = config
+    // The transport RESOLUTION stays in this repo on purpose (the core
+    // takes the client ALREADY BUILT): `instanceof` reads THIS repo's
+    // `HttpClient`, the subclass seating the MELCloud redaction
+    // vocabulary, so a bare core client is rebuilt rather than adopted —
+    // the 2026-08-21 leak's failure class, at the transport seam.
+    const transport =
+      config.transport instanceof HttpClient
+        ? config.transport
+        : new HttpClient({
+            ...httpConfig,
+            timeout: config.transport?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+          })
     super(config, {
       defaultSyncIntervalMinutes,
       logLabel,
@@ -140,21 +157,11 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
       // (`src/observability/context.ts`): without it the core's log
       // lines fall back to the base vocabulary, and the MELCloud keys
       // (`contextkey`, `access_token`, `owneremail`…) travel in clear —
-      // the 2026-08-21 leak's failure class, at the dispatch seam.
+      // the same leak class, at the dispatch seam.
       redaction,
-      // The transport RESOLUTION stays in this repo on purpose (the
-      // core takes the client ALREADY BUILT): `instanceof` reads THIS
-      // repo's `HttpClient`, the subclass seating the MELCloud
-      // redaction vocabulary, so a bare core client is rebuilt rather
-      // than adopted — the same leak class, at the transport seam.
-      transport:
-        transport instanceof HttpClient
-          ? transport
-          : new HttpClient({
-              ...httpConfig,
-              timeout: transport?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-            }),
+      transport,
     })
+    this.timeoutMs = transport.timeout
   }
 
   /**

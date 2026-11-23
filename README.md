@@ -247,7 +247,7 @@ A write throws `NoChangesError`, `UpdateRejectedError` when MELCloud Classic rej
 
 - A read is retried up to 4 times on a 500, 502, 503 or 504 answer, a failed connection or a timeout, after about 1, 2, 4 and 8 seconds. A write is never retried on those failures: one that MELCloud may have applied is not sent twice. A request you abort is not retried either.
 - After a 429 answer, the client holds every read and write for as long as MELCloud asks in `Retry-After` (a number of seconds or a date), or for 2 hours when it gives none. Meanwhile a read returns `rate-limited`, a write throws `RateLimitError` (with `retryAfter` and `unblockAt`), and `api.isRateLimited` is `true`.
-- A request times out after 30 seconds. `transport: { timeoutMs }` changes that, and `0` removes the limit (not recommended). On MELCloud Home, signing in and renewing the session are outside that limit: the client sets none on them, and the `abortSignal` you gave `create()` is what cancels them.
+- A request times out after 30 seconds. `transport: { timeoutMs }` changes that, and `0` removes the limit (not recommended). The limit holds for every request the client makes, those of a MELCloud Home sign-in and session renewal included.
 
 ### Logs and events
 

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **The requests of a MELCloud Home sign-in and session renewal hold to the transport's timeout.** Those requests go out beside the transport, on `fetch`, and carried no limit of the client's own: the `abortSignal` given to `create()` was all that could end one the server never answered. Each of them now takes the transport's limit (`transport: { timeoutMs }`, 30 seconds by default, `0` for none), and the caller's abort still ends it. One that runs past the limit fails as a transport fault does: an automatic sign-in is retried a minute later with no loss announced, and a renewal falls back to the full sign-in.
+
 ## [62.1.1] - 2026-11-22
 
 ### Fixed

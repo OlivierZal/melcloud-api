@@ -35,9 +35,9 @@ const REDIRECT_STATUS_MAX = 400
  */
 interface AuthRequestOptions {
   jar: CookieJar
+  limits: RequestLimits
   method: string
   url: string
-  abortSignal?: AbortSignal
   body?: string
   headers?: Record<string, string>
 }
@@ -47,8 +47,8 @@ interface AuthRequestOptions {
  */
 interface FollowRedirectsOptions {
   jar: CookieJar
+  limits: RequestLimits
   url: string
-  abortSignal?: AbortSignal
   remaining?: number
 }
 
@@ -58,8 +58,8 @@ interface FollowRedirectsOptions {
 interface PostFormOptions {
   body: string
   headers: Record<string, string>
+  limits: RequestLimits
   url: string
-  abortSignal?: AbortSignal
 }
 
 /**
@@ -69,8 +69,34 @@ interface SubmitCredentialsOptions {
   authorizeUrl: string
   credentials: { password: string; username: string }
   jar: CookieJar
-  abortSignal?: AbortSignal
+  limits: RequestLimits
 }
+
+/**
+ * What bounds each request of the flow. The flow drives `fetch` itself,
+ * beside the transport, so it is handed the transport's own bounds.
+ */
+export interface RequestLimits {
+  /**
+   * The time one request may take, in milliseconds; `0` sets no limit.
+   */
+  readonly timeoutMs: number
+  /**
+   * The caller's abort, which ends the request in flight.
+   */
+  readonly abortSignal?: AbortSignal | undefined
+}
+
+// One signal per request, made as the request leaves: a timeout runs
+// from the moment its signal is made.
+const requestSignal = ({
+  abortSignal,
+  timeoutMs,
+}: RequestLimits): AbortSignal =>
+  AbortSignal.any([
+    ...(abortSignal === undefined ? [] : [abortSignal]),
+    ...(timeoutMs > 0 ? [AbortSignal.timeout(timeoutMs)] : []),
+  ])
 
 // Small POST-form helper for the OIDC flow. The two endpoints it
 // targets (PAR, token exchange) always return JSON; parse
@@ -80,16 +106,16 @@ interface SubmitCredentialsOptions {
 // Error — so doAuthenticate's status classification (429 throttle,
 // 401 normalization) sees real server refusals from these endpoints.
 const fetchPostForm = async ({
-  abortSignal,
   body,
   headers,
+  limits,
   url,
 }: PostFormOptions): Promise<HttpResponse> => {
   const response = await fetch(url, {
     body,
     headers,
     method: 'POST',
-    ...(abortSignal !== undefined && { signal: abortSignal }),
+    signal: requestSignal(limits),
   })
   const responseHeaders = readHeaders(response.headers)
   const text = await response.text()
@@ -146,20 +172,20 @@ const storeCookies = async (
  * `redirect: 'manual'` so this module can inspect each 3xx response
  * explicitly and drive the flow step-by-step — non-2xx statuses
  * therefore do not throw.
- * @param options - Request target plus cookie-jar and abort plumbing.
- * @param options.abortSignal - Optional abort signal.
+ * @param options - Request target plus cookie-jar and limits plumbing.
  * @param options.body - Request body, when the step posts a form.
  * @param options.headers - Request headers beside the jar's cookies.
  * @param options.jar - CookieJar for cross-domain cookie management.
+ * @param options.limits - What bounds the request.
  * @param options.method - HTTP method.
  * @param options.url - Target URL.
  * @returns The raw HTTP response as an {@link HttpResponse}.
  */
 const authRequest = async ({
-  abortSignal,
   body,
   headers = {},
   jar,
+  limits,
   method,
   url,
 }: AuthRequestOptions): Promise<HttpResponse<string>> => {
@@ -171,8 +197,8 @@ const authRequest = async ({
     },
     method: method.toUpperCase(),
     redirect: 'manual',
+    signal: requestSignal(limits),
     ...(body !== undefined && { body }),
-    ...(abortSignal !== undefined && { signal: abortSignal }),
   })
   const result = {
     data: await response.text(),
@@ -300,16 +326,16 @@ const extractRedirectTarget = (
  * non-redirect page is reached or the URL matches the app's custom
  * scheme (`melcloudhome://`).
  * @param options - The redirect-following options.
- * @param options.abortSignal - Optional abort signal.
  * @param options.jar - CookieJar for cross-domain cookie management.
+ * @param options.limits - What bounds each request of the chain.
  * @param options.remaining - Number of remaining redirects allowed.
  * @param options.url - Current URL to follow.
  * @returns The final response data and URL.
  * @throws An `Error` when the redirect chain exceeds the maximum hop count.
  */
 const authFollowRedirects = async ({
-  abortSignal,
   jar,
+  limits,
   remaining = MAX_REDIRECTS,
   url,
 }: FollowRedirectsOptions): Promise<{ data: string; url: string }> => {
@@ -319,19 +345,14 @@ const authFollowRedirects = async ({
   if (url.startsWith(REDIRECT_URI)) {
     return { data: '', url }
   }
-  const response = await authRequest({
-    jar,
-    method: 'get',
-    url,
-    ...(abortSignal !== undefined && { abortSignal }),
-  })
+  const response = await authRequest({ jar, limits, method: 'get', url })
   const redirectTarget = extractRedirectTarget(response, url)
   if (redirectTarget !== null) {
     return authFollowRedirects({
       jar,
+      limits,
       remaining: remaining - 1,
       url: redirectTarget,
-      ...(abortSignal !== undefined && { abortSignal }),
     })
   }
   return { data: response.data, url }
@@ -339,17 +360,17 @@ const authFollowRedirects = async ({
 
 /**
  * Push Authorization Request — returns the opaque `request_uri`.
- * @param options - PKCE challenge plus abort plumbing for the PAR call.
+ * @param options - PKCE challenge plus limits plumbing for the PAR call.
  * @param options.challenge - The PKCE code challenge.
- * @param options.abortSignal - Optional signal to abort the request.
+ * @param options.limits - What bounds the request.
  * @returns The opaque PAR request URI.
  */
 const par = async ({
-  abortSignal,
   challenge,
+  limits,
 }: {
   challenge: string
-  abortSignal?: AbortSignal
+  limits: RequestLimits
 }): Promise<string> => {
   const parameters = new URLSearchParams({
     client_id: CLIENT_ID,
@@ -366,8 +387,8 @@ const par = async ({
       Authorization: AUTH_BASIC,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
+    limits,
     url: `${AUTH_BASE_URL}${PAR_PATH}`,
-    ...(abortSignal !== undefined && { abortSignal }),
   })
   return parseOrThrow(HomeParResponseSchema, data, 'OIDC PAR endpoint')
     .request_uri
@@ -387,23 +408,23 @@ const refusedSubmissionMessage = (html: string): string => {
 /**
  * Navigate to the Cognito login page and submit credentials.
  * @param options - The credential submission options.
- * @param options.abortSignal - Optional abort signal.
  * @param options.authorizeUrl - The OIDC authorize URL to start from.
  * @param options.credentials - The user's login credentials.
  * @param options.jar - CookieJar for the auth flow.
+ * @param options.limits - What bounds each request of the step.
  * @returns The callback location URL after credential submission.
  * @throws An {@link AuthenticationError} when the credentials are rejected.
  */
 const submitCredentials = async ({
-  abortSignal,
   authorizeUrl,
   credentials,
   jar,
+  limits,
 }: SubmitCredentialsOptions): Promise<string> => {
   const { data: html } = await authFollowRedirects({
     jar,
+    limits,
     url: authorizeUrl,
-    ...(abortSignal !== undefined && { abortSignal }),
   })
   const action = extractFormAction(html)
   if (action === null) {
@@ -419,9 +440,9 @@ const submitCredentials = async ({
     body: form.toString(),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     jar,
+    limits,
     method: 'post',
     url: action,
-    ...(abortSignal !== undefined && { abortSignal }),
   })
   const callbackLocation = String(submitResponse.headers.location ?? '')
   if (callbackLocation === '') {
@@ -437,7 +458,7 @@ const submitCredentials = async ({
  * Follow the callback chain and extract the authorization code.
  * @param callbackUrl - Cognito-issued URL that starts the redirect hops.
  * @param jar - Carries the session cookies across the redirect hops.
- * @param abortSignal - Cancels the redirect chain mid-flight when triggered.
+ * @param limits - What bounds each request of the chain.
  * @returns The one-time `code` query value from the final IdentityServer
  * redirect.
  * @throws An {@link AuthenticationError} when the callback carries no
@@ -446,13 +467,9 @@ const submitCredentials = async ({
 const extractAuthorizationCode = async (
   callbackUrl: string,
   jar: CookieJar,
-  abortSignal?: AbortSignal,
+  limits: RequestLimits,
 ): Promise<string> => {
-  const { url } = await authFollowRedirects({
-    jar,
-    url: callbackUrl,
-    ...(abortSignal !== undefined && { abortSignal }),
-  })
+  const { url } = await authFollowRedirects({ jar, limits, url: callbackUrl })
   const { host, pathname, protocol, searchParams } = new URL(url)
   const code = searchParams.get('code')
   if (code === null) {
@@ -475,17 +492,17 @@ const extractAuthorizationCode = async (
 
 /**
  * POST to the IdentityServer token endpoint and validate the response.
- * @param options - Form parameters plus abort plumbing for the token call.
+ * @param options - Form parameters plus limits plumbing for the token call.
+ * @param options.limits - What bounds the request.
  * @param options.params - URL-encoded form parameters for the token request.
- * @param options.abortSignal - Optional signal to abort the request.
  * @returns The token response, validated by the Zod schema.
  */
 const tokenRequest = async ({
-  abortSignal,
+  limits,
   params,
 }: {
+  limits: RequestLimits
   params: Record<string, string>
-  abortSignal?: AbortSignal
 }): Promise<HomeTokenResponse> => {
   const form = new URLSearchParams(params)
   const { data: tokens } = await fetchPostForm({
@@ -494,46 +511,44 @@ const tokenRequest = async ({
       Authorization: AUTH_BASIC,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
+    limits,
     url: `${AUTH_BASE_URL}${TOKEN_PATH}`,
-    ...(abortSignal !== undefined && { abortSignal }),
   })
   return parseOrThrow(HomeTokenResponseSchema, tokens, 'OIDC token endpoint')
 }
 
 /**
  * Full headless OIDC login: PAR → Cognito → token exchange.
- * @param options - Credentials plus abort plumbing for the full login flow.
+ * @param options - Credentials plus limits plumbing for the full login flow.
  * @param options.credentials - The user's login credentials.
  * @param options.credentials.password - The user's password.
  * @param options.credentials.username - The user's username.
- * @param options.abortSignal - Optional signal to abort the auth flow.
+ * @param options.limits - What bounds each request of the flow.
  * @returns The token response containing access and refresh tokens.
  */
 export const performTokenAuth = async ({
-  abortSignal,
   credentials,
+  limits,
 }: {
   credentials: { password: string; username: string }
-  abortSignal?: AbortSignal
+  limits: RequestLimits
 }): Promise<HomeTokenResponse> => {
   const { challenge, verifier } = generatePKCE()
   const jar = new CookieJar()
 
-  const requestUri = await par({
-    challenge,
-    ...(abortSignal !== undefined && { abortSignal }),
-  })
+  const requestUri = await par({ challenge, limits })
   const authorizeUrl = `${AUTH_BASE_URL}/connect/authorize?client_id=${CLIENT_ID}&request_uri=${encodeURIComponent(requestUri)}`
 
   const callbackUrl = await submitCredentials({
     authorizeUrl,
     credentials,
     jar,
-    ...(abortSignal !== undefined && { abortSignal }),
+    limits,
   })
-  const code = await extractAuthorizationCode(callbackUrl, jar, abortSignal)
+  const code = await extractAuthorizationCode(callbackUrl, jar, limits)
 
   return tokenRequest({
+    limits,
     params: {
       client_id: CLIENT_ID,
       code,
@@ -541,7 +556,6 @@ export const performTokenAuth = async ({
       grant_type: 'authorization_code',
       redirect_uri: REDIRECT_URI,
     },
-    ...(abortSignal !== undefined && { abortSignal }),
   })
 }
 
@@ -553,28 +567,28 @@ export const performTokenAuth = async ({
  * refused or expired grant is a 4xx `HttpError`, a network blip a
  * `fetch failed`) as ONE line naming its cause chain, anything else
  * with its error object, whose stack is what locates a bug.
- * @param options - Refresh token plus logging and abort plumbing.
+ * @param options - Refresh token plus logging and limits plumbing.
  * @param options.refreshToken - The user's refresh token.
- * @param options.abortSignal - Optional signal to abort the refresh.
+ * @param options.limits - What bounds the request.
  * @param options.logger - Sink the failure line is written to.
  * @returns The new token response, or `null` if refresh failed.
  */
 export const refreshAccessToken = async ({
-  abortSignal,
+  limits,
   logger,
   refreshToken,
 }: {
+  limits: RequestLimits
   logger: Logger
   refreshToken: string
-  abortSignal?: AbortSignal
 }): Promise<HomeTokenResponse | null> => {
   const request = {
+    limits,
     params: {
       client_id: CLIENT_ID,
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
     },
-    ...(abortSignal !== undefined && { abortSignal }),
   }
   try {
     return await tokenRequest(request)

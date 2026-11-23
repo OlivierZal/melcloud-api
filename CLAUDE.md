@@ -1154,6 +1154,23 @@ page, a chain that lands without a code). The kernel pins the three
 branches; the additive surface (`isAuthFailure`,
 `dispatch(…, { authenticated: false })`) is not seated here.
 
+The Home OIDC flow (`src/api/token-auth.ts`) drives `fetch` itself,
+beside the transport: the multi-domain redirect chain needs its own
+cookie jar and `redirect: 'manual'`. So nothing of the transport reaches
+it unless it is handed over, and until 62.2.0 the timeout was not: a
+sign-in or a renewal the server never answered ended on the caller's
+`abortSignal` alone. `BaseAPI` now keeps the resolved transport's limit
+(`timeoutMs`, the prebuilt client's `timeout` or the `{ timeoutMs }`
+arm), and `HomeAPI` hands it to the flow with its abort as one
+`RequestLimits`; the flow makes ONE signal per request, as the request
+leaves (`requestSignal`: a timeout runs from the moment its signal is
+made, so a signal made once for the whole flow would be a budget for
+the ten-odd requests of a sign-in, not the per-request limit the
+transport documents). A request past the limit rejects with the
+`TimeoutError` the core classifies as a transport fault, hence the
+transient paths above. `AbortSignal.timeout` does not run on vitest's
+fake timers: the suite waits out a real 20 ms limit.
+
 `ClassicFacadeManager.get` ships the typed required overloads,
 `get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):
 ClassicFacade | null`) — the shape the Home and heatzy managers had too
