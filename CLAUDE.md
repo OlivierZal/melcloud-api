@@ -1154,6 +1154,20 @@ page, a chain that lands without a code). The kernel pins the three
 branches; the additive surface (`isAuthFailure`,
 `dispatch(…, { authenticated: false })`) is not seated here.
 
+`classifyError` keeps the thrown error on EVERY failure it describes
+(`cause`), the `rate-limited` one included since 62.2.0. The descriptor
+is for a caller that reads a `Result`; a caller that must throw again
+needs the error itself. One does: below a building, a first Classic
+frost-protection or holiday-mode write reads where the settings live
+(`#getFrostProtectionLocation`, `#getHolidayModeLocation`; a building
+knows from the listing's `FPDefined`/`HMDefined`), and
+`throwLocationError` rethrows the failed read's `cause`. The gate's
+refusal carried none, so that write threw `Error('Could not resolve
+location: rate-limited')` where every other write throws
+`RateLimitError` (reproduced on an area in
+`tests/integration/api-lifecycle.test.ts`). `not-found` stays the one
+kind with no `cause`: nothing was thrown.
+
 The Home OIDC flow (`src/api/token-auth.ts`) drives `fetch` itself,
 beside the transport: the multi-domain redirect chain needs its own
 cookie jar and `redirect: 'manual'`. So nothing of the transport reaches

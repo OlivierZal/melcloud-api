@@ -112,9 +112,10 @@ const getWithZoneFallback = async <TResult>(
 // Mutation prep paths (`#getFrostProtectionLocation`,
 // `#getHolidayModeLocation`) cannot proceed without a resolved
 // location, so a `!ok` result must surface as a throw. Preserves the
-// original `cause` when one is available so the caller sees the
-// underlying transport error class; otherwise synthesises a labeled
-// `Error` from the kind.
+// original `cause` when one is available so the caller sees the error
+// class a write throws by itself (the transport's, the rate-limit
+// gate's `RateLimitError`); otherwise synthesises a labeled `Error`
+// from the kind.
 const throwLocationError = (error: ApiRequestError): never => {
   if ('cause' in error && error.cause instanceof Error) {
     throw error.cause
