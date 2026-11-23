@@ -108,6 +108,25 @@ if (device !== undefined) {
 }
 ```
 
+### Options
+
+`create()` takes these options, all optional:
+
+| Option                            | Default                                            | What it does                                                                                                         |
+| --------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `username`, `password`            | none                                               | The account to sign in with. Without them, `create()` restores a stored session, or waits for `authenticate()`.      |
+| `settingManager`                  | none: everything stays in memory                   | The store that keeps the session and the credentials across restarts (see "Sign in and keep the session").           |
+| `shouldResumeSessionInBackground` | `false`                                            | `true` makes `create()` return at once and sign in in the background: `isAuthenticated()` can be `false` until then. |
+| `syncIntervalMinutes`             | 5 on MELCloud Classic, 1 on Home                   | The minutes between two automatic refreshes of the devices, or `false` for none.                                     |
+| `timezone`                        | the host's time zone, UTC for MELCloud Home charts | The IANA time zone of your clock: holiday dates and the day and hour windows of charts are read in it.               |
+| `locale`                          | the runtime's locale                               | The BCP 47 locale of the chart labels.                                                                               |
+| `language`                        | `'en'`                                             | `ClassicAPI` only: the language MELCloud Classic words its own messages in.                                          |
+| `baseURL`                         | MELCloud Home's own                                | `HomeAPI` only: the address of the MELCloud Home server.                                                             |
+| `transport`                       | a built-in client, 30 s per request                | `{ timeoutMs }`, or an `HttpClient` of your own (see "Retries, rate limits and timeouts").                           |
+| `abortSignal`                     | none                                               | Cancels the client's requests when it aborts (see "Find devices, buildings and zones").                              |
+| `logger`                          | `console`                                          | Where the client logs (see "Logs and events").                                                                       |
+| `events`                          | none                                               | Callbacks around requests, refreshes and the session (see "Logs and events").                                        |
+
 ## Usage
 
 ### Sign in and keep the session
@@ -153,6 +172,8 @@ The client refreshes the registry by itself, every 5 minutes on MELCloud Classic
 Every device facade has `name`, `power`, `rssi`, `isAvailable` (`false` after a day without contact with MELCloud), and `isInError` and `errorMessage` (a fault the unit itself reports). MELCloud Classic keeps the other values in `facade.data`, under MELCloud's own names (`RoomTemperature`, `SetTemperature`). MELCloud Home has a property for each (`roomTemperature`, `setTemperature`). An air-to-water facade adds `hotWater`, `zone1` and `zone2`.
 
 `updateValues` writes the fields you pass. On an air-to-air unit they are `Power`, `OperationMode`, `SetTemperature`, `SetFanSpeed`, `VaneHorizontal` and `VaneVertical` on MELCloud Classic, with values from the `Classic*` constants (`ClassicOperationMode.heat`), and `power`, `operationMode`, `setTemperature`, `setFanSpeed`, `vaneHorizontalDirection` and `vaneVerticalDirection` on MELCloud Home, with string values (`'Heat'`), where `inStandbyMode` and `temperatureIncrementOverride` exist too. `updatePower(true)` only switches a unit on, `updatePower(false)` off.
+
+An air-to-water unit takes its zone and hot water fields: `OperationModeZone1`, `SetTemperatureZone1`, `SetTankWaterTemperature` and `ForcedHotWaterMode` on MELCloud Classic, `operationModeZone1`, `setTemperatureZone1`, `setTankWaterTemperature` and `forcedHotWaterMode` on MELCloud Home, with their `Zone2` twins. A ventilation unit takes `SetFanSpeed` and `VentilationMode`. The reference lists every field under `ClassicUpdateDeviceDataAtw`, `ClassicUpdateDeviceDataErv` and `HomeAtwValues`.
 
 A setpoint is clamped to the range the unit accepts before it is sent. A write that would change nothing throws `NoChangesError` and sends nothing: on MELCloud Classic when the registry already holds every value, on MELCloud Home when you pass no value. After a write, the registry holds the new state.
 
@@ -239,9 +260,28 @@ const switchOff = async (facade: HomeDeviceAtaFacade): Promise<void> => {
 }
 ```
 
-`error.kind` is `network`, `unauthorized`, `rate-limited` (with `retryAfterMs`), `validation` (the answer does not have the expected shape, with `issue`), `server` (any other HTTP error, with `status`) or `not-found` (MELCloud Home only: the unit has left the account, with `entityId`). Every kind but `not-found` carries the error it came from as `cause`.
+A failed read says why in `error.kind`. Every kind but `not-found` also carries the error it came from as `cause`.
 
-A write throws `NoChangesError`, `UpdateRejectedError` when MELCloud Classic rejects a value (`attributeErrors` holds its messages per field), `RateLimitError` while requests are paused, `EntityNotFoundError` when the unit has left the account (`facade.exists` checks without throwing), `HttpError` when MELCloud answers an error status, or the network failure itself. All but the last two extend `APIError`, and `isAPIError` and `isHttpError` tell them apart. `logFailure(logger, label, error)` logs any of them on one line: the label, then the error and its causes. It logs anything else with its stack. A write to several units at once (a Home building, a combined group or target) throws a single failure as itself and several as one `AggregateError`.
+| `error.kind`   | When                                                | Carries        |
+| -------------- | --------------------------------------------------- | -------------- |
+| `network`      | the request got no answer: no connection, a timeout |                |
+| `unauthorized` | MELCloud refuses the session or the credentials     |                |
+| `rate-limited` | requests are paused after a 429 answer              | `retryAfterMs` |
+| `validation`   | the answer does not have the expected shape         | `issue`        |
+| `server`       | MELCloud answers any other error status             | `status`       |
+| `not-found`    | MELCloud Home only: the unit has left the account   | `entityId`     |
+
+A write throws one of the errors below, or the network failure itself. All but `HttpError` extend `APIError`: `isAPIError` and `isHttpError` tell them apart.
+
+| Error                 | Thrown when                                                             | Carries                                                                     |
+| --------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `NoChangesError`      | the write would change nothing                                          | `entityId`                                                                  |
+| `UpdateRejectedError` | MELCloud Classic rejects a value                                        | `attributeErrors`, its messages per field                                   |
+| `RateLimitError`      | requests are paused after a 429 answer                                  | `retryAfter` and `unblockAt`                                                |
+| `EntityNotFoundError` | the unit has left the account (`facade.exists` checks without throwing) | `entityId`                                                                  |
+| `HttpError`           | MELCloud answers an error status                                        | `response.status` and `response.data`, credentials and personal data masked |
+
+`logFailure(logger, label, error)` logs any of them on one line: the label, then the error and its causes. It logs anything else with its stack. A write to several units at once (a Home building, a combined group or target) throws a single failure as itself and several as one `AggregateError`.
 
 ### Retries, rate limits and timeouts
 
@@ -257,7 +297,19 @@ A write throws `NoChangesError`, `UpdateRejectedError` when MELCloud Classic rej
 
 ### Choose an entry point
 
-At the root, a name that belongs to one API carries a `Classic` or `Home` prefix. `/classic` and `/home` export the same symbols without it: `ClassicAPI` is `API` in `/classic` (one type apart: `ErrorLogEntry` in `/home` is the shared entry, not `HomeErrorLogEntry`). The root, `/classic` and `/home` need Node.js. The other subpaths hold constants, types and pure functions that a browser bundle can import: `/constants` (the enum-like constants), `/enum-mappings` (records that translate values between the two APIs, such as `operationModeFromClassic`), `/protection`, `/holiday-mode`, `/error-log` and `/temperature-range` (the types and helpers of those features), `/atw-state` and `/report` (types), and `/temporal` (`Temporal` and `Intl`).
+The root, `/classic` and `/home` need Node.js. The other subpaths hold constants, types and pure functions that a browser bundle can import too.
+
+| Import                                                             | What it gives                                                                          | Runs in            |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ------------------ |
+| `@olivierzal/melcloud-api`                                         | everything: a name that belongs to one API carries a `Classic` or `Home` prefix        | Node.js            |
+| `/classic`, `/home`                                                | one API's symbols without the prefix: `ClassicAPI` is `API` in `/classic`              | Node.js            |
+| `/constants`                                                       | the enum-like constants                                                                | Node.js, a browser |
+| `/enum-mappings`                                                   | records that translate values between the two APIs, such as `operationModeFromClassic` | Node.js, a browser |
+| `/protection`, `/holiday-mode`, `/error-log`, `/temperature-range` | the types and helpers of those features                                                | Node.js, a browser |
+| `/atw-state`, `/report`                                            | types                                                                                  | Node.js, a browser |
+| `/temporal`                                                        | `Temporal` and `Intl`                                                                  | Node.js, a browser |
+
+One type differs between the root and `/home`: `ErrorLogEntry` in `/home` is the shared entry, not `HomeErrorLogEntry`.
 
 ```ts title="imports"
 import * as Classic from '@olivierzal/melcloud-api/classic'
