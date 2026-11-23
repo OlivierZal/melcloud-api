@@ -4,6 +4,12 @@ Typed Node.js client for the MELCloud (Classic) and MELCloud Home APIs.
 ESM only, Node >= 22.20, published to GitHub Packages. `erasableSyntaxOnly`
 is on: no runtime enums, no parameter properties, no runtime namespaces.
 
+The README speaks to the package's USER: what it gives, how to install
+it and how to use it, with examples that compile. It never explains how
+the package is built or why (owner's rule, 2026-11-22): the architecture
+and the full surface are the generated reference's, the doctrine and its
+reasons are this file's, the workflow is CONTRIBUTING.md's.
+
 ## Commands
 
 - `npm run lint` / `npm run lint:fix` — ESLint (runs with an 8 GB heap).
@@ -12,17 +18,21 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   explicit path `node ./node_modules/@typescript/native/bin/tsc`; covers
   `src`, `tests` and the `*.config.ts` files (tsconfig `include`) — only
   `typedoc.config.js` stays outside it (JSDoc-typed under `@ts-check`;
-  the lint still covers it). Official 6/7 side-by-side
-  layout: the `typescript` name aliases `@typescript/typescript6` (the
-  TS6 JS API) for the tools that import it (typedoc, typescript-eslint),
-  while `@typescript/native` is the native 7.x compiler running typecheck
-  and build — until TS 7.1 ships its programmatic API. `@typescript/native`
-  does declare a `tsc` bin, but LOSES the `.bin/tsc` slot to
-  `@typescript/old` (the TS 6 the compat package depends on) under
-  npm's bin-conflict resolution — so the shim a bare `tsc` runs is
-  TypeScript 6, like `.bin/tsc6`, and a bare `tsc` in a script would
-  silently typecheck against TS 6. The explicit path is the only
-  reliable route to the 7.x compiler; never shorten it.
+  the lint still covers it). Official 6/7 side-by-side layout: the
+  `typescript` name aliases `@typescript/typescript6` (the TS6 JS API)
+  for the tools that import it (typedoc, typescript-eslint), while
+  `@typescript/native` is the native 7.x compiler running typecheck and
+  build — until TS 7.1 ships its programmatic API. Never shorten the
+  path. Not because a bare `tsc` runs the wrong compiler today:
+  re-measured 2026-11-22, in this tree and in fresh installs under npm
+  10.9.8 and 11.20.0, `.bin/tsc` is the native 7.x compiler and `tsc6`
+  the only shim of the TypeScript 6 compat package (it was the other way
+  round when the layout was adopted, in August 2026). Two installed
+  packages declare a `tsc` bin, `@typescript/native` and
+  `@typescript/old` (the TypeScript 6 the compat package depends on),
+  and npm gives the shim to one of them: the explicit path names the
+  package the script means, so a layout change fails loudly instead of
+  swapping the compiler behind the shim.
 - `npm run build` — purges `dist` before emitting, because `tsc` overwrites
   but never deletes: a module renamed or removed in `src` would otherwise
   survive in `dist`, and `files` ships that directory, so `prepare` would
@@ -1393,6 +1403,14 @@ that re-derives it, never by hand.
   been needed from a browser — the test pins their set so a new one
   forces that decision. `./package.json` is published too: an `exports`
   map otherwise hides the manifest from the tooling that reads it.
+- `/classic` and `/home` are the two NAMESPACED barrels, not flat
+  modules: each re-exports the root's `Classic*` or `Home*` symbols with
+  the prefix stripped, so `import * as Classic from '…/classic'` reads
+  `Classic.API`, `Classic.FanSpeed`. That is their whole reason: a
+  modern alternative to a TypeScript `namespace`, which this repo could
+  not use for values anyway (`erasableSyntaxOnly`, top of this file).
+  The README shows the usage only (owner's rule above): the reason
+  lives here.
 - The four SDK-internal decorators (`classicUpdateDevice`,
   `classicUpdateDevices`, `fetchDevices`, `syncDevices`) are NOT
   public since 56.0.0, by verdict: they bind to SDK internals
