@@ -84,13 +84,17 @@ export const mapResult = <T, TResult>(
  *   call. `retryAfterMs` is the remaining milliseconds on the pause,
  *   or `null` when the upstream header did not carry a duration.
  *   This is the plain-number twin of `RateLimitError.retryAfter`
- *   (a `Temporal.Duration`); both describe the same gate window.
+ *   (a `Temporal.Duration`); both describe the same gate window, and
+ *   `cause` is that `RateLimitError`.
  * - `validation`: Zod refused the response shape. Indicates API drift
  *   server-side; not retryable on its own — investigate.
  * - `server`: any other HTTP error from the transport.
  * - `not-found`: the registry does not hold the addressed id. Home's
  *   `Result`-returning reads answer it instead of throwing
  *   `EntityNotFoundError`; Classic never produces it.
+ *
+ * A failure that came from a thrown error carries it as `cause`, so a
+ * caller that has to throw again throws the error itself.
  *
  * Classic and Home share the same error space (same transport layer,
  * same resilience policies); both surfaces reference this single
@@ -105,7 +109,11 @@ export type ApiRequestError =
       readonly cause?: unknown
     }
   | { readonly kind: 'network'; readonly cause?: unknown }
-  | { readonly kind: 'rate-limited'; readonly retryAfterMs: number | null }
+  | {
+      readonly kind: 'rate-limited'
+      readonly retryAfterMs: number | null
+      readonly cause?: unknown
+    }
   | {
       readonly kind: 'server'
       readonly status: number

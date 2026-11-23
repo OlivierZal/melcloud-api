@@ -239,7 +239,7 @@ const switchOff = async (facade: HomeDeviceAtaFacade): Promise<void> => {
 }
 ```
 
-`error.kind` is `network`, `unauthorized`, `rate-limited` (with `retryAfterMs`), `validation` (the answer does not have the expected shape, with `issue`), `server` (any other HTTP error, with `status`) or `not-found` (MELCloud Home only: the unit has left the account, with `entityId`).
+`error.kind` is `network`, `unauthorized`, `rate-limited` (with `retryAfterMs`), `validation` (the answer does not have the expected shape, with `issue`), `server` (any other HTTP error, with `status`) or `not-found` (MELCloud Home only: the unit has left the account, with `entityId`). Every kind but `not-found` carries the error it came from as `cause`.
 
 A write throws `NoChangesError`, `UpdateRejectedError` when MELCloud Classic rejects a value (`attributeErrors` holds its messages per field), `RateLimitError` while requests are paused, `EntityNotFoundError` when the unit has left the account (`facade.exists` checks without throwing), `HttpError` when MELCloud answers an error status, or the network failure itself. All but the last two extend `APIError`, and `isAPIError` and `isHttpError` tell them apart. `logFailure(logger, label, error)` logs any of them on one line: the label, then the error and its causes. It logs anything else with its stack. A write to several units at once (a Home building, a combined group or target) throws a single failure as itself and several as one `AggregateError`.
 

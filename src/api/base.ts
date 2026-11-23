@@ -36,6 +36,7 @@ export const classifyError = (error: unknown): ApiRequestError => {
   }
   if (error instanceof RateLimitError) {
     return {
+      cause: error,
       kind: 'rate-limited',
       retryAfterMs:
         error.retryAfter === null

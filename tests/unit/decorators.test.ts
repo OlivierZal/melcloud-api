@@ -426,6 +426,22 @@ describe(classifyError, () => {
   ])('classifies $label', ({ error, expected }) => {
     expect(classifyError(error)).toMatchObject(expected)
   })
+
+  // Every failure a thrown error is classified into keeps that error: a
+  // caller that must throw again (a write that first reads where its
+  // settings live) throws the typed error, not a description of it.
+  it('keeps the RateLimitError a rate-limited failure came from', () => {
+    const error = new RateLimitError('paused', {
+      retryAfter: Temporal.Duration.from({ milliseconds: 5000 }),
+      unblockAt: null,
+    })
+
+    expect(classifyError(error)).toStrictEqual({
+      cause: error,
+      kind: 'rate-limited',
+      retryAfterMs: 5000,
+    })
+  })
 })
 
 // Stacking contract. The project applies `@syncDevices()` on top of

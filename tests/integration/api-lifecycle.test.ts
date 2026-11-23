@@ -15,6 +15,7 @@ import type {
   HomeContext,
 } from '../../src/types/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
+import { RateLimitError } from '../../src/errors/index.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import {
   type HttpResponse,
@@ -405,6 +406,40 @@ describe('api lifecycle', () => {
 
       expect(result.ok).toBe(false)
       expect(!result.ok && result.error.kind).toBe('rate-limited')
+      expect(mockRequest).not.toHaveBeenCalled()
+    })
+
+    // Below the building, a first frost-protection or holiday-mode
+    // write reads where the settings live before it goes out. While the
+    // gate holds requests, that read is refused, and the write must fail
+    // as any other write does then: with the gate's own typed error.
+    it('throws the gate RateLimitError from a first settings write', async () => {
+      const api = await melCloudApi.create({
+        settingManager: persistedClassicSession(),
+        syncIntervalMinutes: false,
+        transport: mockHttpClient,
+      })
+      const manager = new ClassicFacadeManager(api)
+      const area = manager.get(defined(api.registry.areas.getById(100)))
+      mockRequest.mockRejectedValue(
+        new HttpError('Status 429', {
+          config: { url: '/User/ListDevices' },
+          response: { data: {}, headers: { 'retry-after': '60' }, status: 429 },
+        }),
+      )
+      await api.fetch()
+      mockRequest.mockClear()
+
+      await expect(
+        area.updateFrostProtection({ isEnabled: true, max: 14, min: 6 }),
+      ).rejects.toBeInstanceOf(RateLimitError)
+      await expect(
+        area.updateHolidayMode({
+          endDate: '2099-01-02T00:00:00',
+          isEnabled: true,
+          startDate: '2099-01-01T00:00:00',
+        }),
+      ).rejects.toBeInstanceOf(RateLimitError)
       expect(mockRequest).not.toHaveBeenCalled()
     })
 
