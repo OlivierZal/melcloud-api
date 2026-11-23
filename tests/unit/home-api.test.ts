@@ -172,6 +172,34 @@ const NO_HOME_LOG =
 const countTokenCalls = (): number =>
   mockFetch.mock.calls.filter((call) => isTokenEndpointCall(call)).length
 
+// `fetch` against a server that never answers: nothing happens until
+// the request's own signal gives up, and the request then fails with
+// that signal's reason, as the real one does.
+const neverAnswers: typeof fetch = async (_input, init) => {
+  const signal = defined(init?.signal)
+  await new Promise((resolve) => {
+    signal.addEventListener('abort', resolve)
+  })
+  signal.throwIfAborted()
+  return Response.error()
+}
+
+// A transport with a limit of its own. The sign-in and the renewal run
+// beside the transport, on `fetch`, and hold to that limit all the same:
+// `SHORT_TIMEOUT_MS` is one a test can wait out, `0` is none.
+const SHORT_TIMEOUT_MS = 20
+const createTransport = (
+  timeout: number,
+): { client: HttpClient; requestSpy: MockInstance<HttpClient['request']> } => {
+  const client = new HttpClient({ baseURL: BASE_URL, timeout })
+  return {
+    client,
+    requestSpy: vi
+      .spyOn(client, 'request')
+      .mockResolvedValue({ data: {}, headers: {}, status: 200 }),
+  }
+}
+
 // The messages the client wrote to one logger level: the dialect label
 // is the first argument, the message the second. The core's own entries
 // (request and response data) are objects and fall out of the filter.
@@ -3107,7 +3135,9 @@ describe('melcloud home API', () => {
       }
     })
 
-    it('should pass AbortSignal to refresh token request', async () => {
+    // Each request of the sign-in and of the renewal carries a signal of
+    // its own, the caller's abort among what ends it.
+    it('should end every sign-in and renewal request on the caller abort', async () => {
       vi.useFakeTimers()
       mockTemporalNowInstant()
       try {
@@ -3130,16 +3160,18 @@ describe('melcloud home API', () => {
           mockHttpResponse(mockContext, {}, 200),
         )
         await api.fetch()
-
-        // Refresh token POST should include the signal
-        const refreshCall = mockFetch.mock.calls.find((call) =>
-          isTokenEndpointCall(call),
+        const signals = mockFetch.mock.calls.map(([, init]) =>
+          defined(init?.signal),
         )
 
-        expect(defined(refreshCall)[1]).toStrictEqual(
-          expect.objectContaining({ signal: controller.signal }),
-        )
+        expect(countTokenCalls()).toBe(2)
+        expect(signals.some((signal) => signal.aborted)).toBe(false)
+
+        controller.abort()
+
+        expect(signals.every((signal) => signal.aborted)).toBe(true)
       } finally {
+        vi.mocked(Temporal.Now.instant).mockRestore()
         vi.useRealTimers()
       }
     })
@@ -3198,6 +3230,39 @@ describe('melcloud home API', () => {
           vi.mocked(Temporal.Now.instant).mockRestore()
           vi.useRealTimers()
         }
+      },
+    )
+
+    // The renewal is one request beside the transport, held to the same
+    // limit: one the server never answers falls back to the full
+    // sign-in instead of holding the request that needed the token.
+    it(
+      'should give up on a renewal the server never answers, at the transport limit',
+      { timeout: 1000 },
+      async () => {
+        const logger = createLogger()
+        const { client, requestSpy } = createTransport(SHORT_TIMEOUT_MS)
+        stageHomeOidcDance(mockFetch)
+        stageHomeTokenExchange(mockFetch)
+        requestSpy.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
+        const api = await createApi({
+          logger,
+          syncIntervalMinutes: false,
+          transport: client,
+        })
+        requestSpy.mockRejectedValueOnce(httpUnauthorized())
+        mockFetch.mockImplementationOnce(neverAnswers)
+        stageHomeOidcDance(mockFetch)
+        stageHomeTokenExchange(mockFetch)
+        requestSpy
+          .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
+          .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
+
+        await expect(api.fetch()).resolves.toStrictEqual([homeContextBuilding])
+        expect(logger.error).toHaveBeenCalledWith(
+          '[Home]',
+          'Refresh token exchange failed: TimeoutError: The operation was aborted due to timeout',
+        )
       },
     )
 
@@ -3271,6 +3336,47 @@ describe('melcloud home API', () => {
         expect.any(Error),
       )
       expect(onAuthenticationLost).not.toHaveBeenCalled()
+    })
+
+    // The sign-in drives `fetch` itself, beside the transport: a request
+    // the server never answers ends at the transport's own limit, as a
+    // transport fault, where it used to wait for as long as Node let it.
+    it(
+      'should give up on a sign-in request the server never answers, at the transport limit',
+      { timeout: 1000 },
+      async () => {
+        const logger = createLogger()
+        const onAuthenticationLost = vi.fn<() => void>()
+        mockFetch.mockImplementationOnce(neverAnswers)
+        const api = await createApi({
+          events: { onAuthenticationLost },
+          logger,
+          transport: createTransport(SHORT_TIMEOUT_MS).client,
+        })
+
+        expect(api.isAuthenticated()).toBe(false)
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(logger.error).toHaveBeenCalledWith(
+          '[Home]',
+          'Session resume failed, retried every minute: TimeoutError: The operation was aborted due to timeout',
+        )
+        expect(onAuthenticationLost).not.toHaveBeenCalled()
+      },
+    )
+
+    it('should set no limit on the sign-in when the transport has none', async () => {
+      const timeout = vi.spyOn(AbortSignal, 'timeout')
+      const { client, requestSpy } = createTransport(0)
+      stageHomeOidcDance(mockFetch)
+      stageHomeTokenExchange(mockFetch)
+      requestSpy.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
+      const api = await createApi({
+        syncIntervalMinutes: false,
+        transport: client,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(timeout).not.toHaveBeenCalled()
     })
 
     it('should handle token exchange failure gracefully', async () => {
