@@ -28,7 +28,7 @@ npm test                # vitest run
 npm run test:coverage   # vitest run --coverage (must remain at 100%)
 ```
 
-The `prepublishOnly` script chains tests + typecheck + lint + format + docs — publishing locally without these passing is impossible.
+The `prepublishOnly` script chains tests + typecheck + lint + format + docs — publishing locally without these passing is impossible. The release workflow publishes the packed tarball instead, for which npm runs no `prepublishOnly`: there, the publish job itself refuses a commit whose latest CI run on `main` has not succeeded.
 
 ## Coverage
 
