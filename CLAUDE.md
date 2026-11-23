@@ -1197,6 +1197,21 @@ transport documents). A request past the limit rejects with the
 transient paths above. `AbortSignal.timeout` does not run on vitest's
 fake timers: the suite waits out a real 20 ms limit.
 
+api-core 2.4.3 (adopted with 62.2.0) is behaviour only, and Home's
+alone. `HomeAPI.reauthenticate` clears the session the server refused
+before it tries to sign back in; with no credentials stored that
+session is gone for good, and the clearing left the cycle's epilogue
+reading a client that had never signed in, so `onAuthenticationLost`
+never fired and the refresh stopped in silence. The core now announces
+it from the reactive recovery itself: the kernel's "Home-only: a
+refused session with no credentials behind it" clause, red against
+2.4.2. `ClassicAPI` is untouched, by its own design: it does not clear
+on a `401` (one can name an endpoint rather than the session), so with
+no credentials it stays signed in over a context key the listing
+refuses, and the cycle that ends there announces nothing (measured on
+the Classic leg, 2026-11-23). Announcing there needs a verdict on which
+`401` means a dead session, a rule the wire has not been measured for.
+
 `ClassicFacadeManager.get` ships the typed required overloads,
 `get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):
 ClassicFacade | null`) — the shape the Home and heatzy managers had too

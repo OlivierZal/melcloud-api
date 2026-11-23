@@ -1860,3 +1860,42 @@ describe('sessionLifecycle — Home-only: a cycle no sign-in preceded', () => {
     expect(onAuthenticationLost).not.toHaveBeenCalled()
   })
 })
+
+// One more divergence of the same kind. `HomeAPI.reauthenticate` clears
+// the session the server just refused before it tries to sign back in,
+// where `ClassicAPI` keeps its context key standing (a Classic `401`
+// can name an endpoint rather than the session). With no credentials
+// stored, the cleared session is gone for good, and the clearing used
+// to leave the cycle's epilogue reading a client that had never signed
+// in: silent, and disarmed for good. The core announces it from the
+// reactive recovery itself (api-core 2.4.3).
+describe('sessionLifecycle — Home-only: a refused session with no credentials behind it', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    homeDriver.reset()
+  })
+
+  afterEach(() => {
+    vi.mocked(Temporal.Now.instant).mockRestore()
+    vi.useRealTimers()
+  })
+
+  it('announces the loss', async () => {
+    const onAuthenticationLost =
+      vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+    const { settingManager } = createSettingStore(homeDriver.persistedSession())
+    homeDriver.stage({ wire: 'ok' })
+    const { api } = await homeDriver.create({
+      events: { onAuthenticationLost },
+      settingManager,
+    })
+    homeDriver.stage({ wire: 'unauthorized-once' })
+
+    await expect(api.fetch()).resolves.toStrictEqual([])
+
+    expect(api.isAuthenticated()).toBe(false)
+    expect(homeDriver.loginCount()).toBe(0)
+    expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
+  })
+})
