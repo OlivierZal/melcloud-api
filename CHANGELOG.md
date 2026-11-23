@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.3.0] - 2026-11-23
+
 ### Added
 
 - `temperatureStep` on the MELCloud Classic air-to-air facade, as the MELCloud Home one has it: `1` on a unit whose listing says it holds whole degrees only (`HasHalfDegreeIncrements: false`), `0.5` otherwise, a listing that does not say included.
@@ -1135,7 +1137,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.2.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.3.0...HEAD
+[62.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.2.0...v62.3.0
 [62.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.1...v62.2.0
 [62.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.0...v62.1.1
 [62.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.3...v62.1.0
