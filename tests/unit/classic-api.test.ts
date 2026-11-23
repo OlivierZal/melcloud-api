@@ -263,10 +263,22 @@ describe('mELCloud Classic API', () => {
         expect(logger.error).toHaveBeenCalledTimes(1)
         expect(logger.error).toHaveBeenCalledWith(
           '[Classic]',
-          `${label} unit 7 has not communicated with MELCloud since ${lastTimestamp} (building time), over 24 h; it reads unavailable`,
+          `${label} unit 7 has not communicated with MELCloud since ${lastTimestamp} (building time); it reads unavailable`,
         )
       },
     )
+
+    // The year-one stamp is MELCloud's marker for "never happened": it
+    // is worded, not dated.
+    it('says a unit never communicated when the stamp is the year-one marker', async () => {
+      const logger = await fetchWithLogger(listingWith('0001-01-01T00:00:00'))
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        'ATA unit 7 has never communicated with MELCloud; it reads unavailable',
+      )
+    })
 
     it('says nothing of a unit heard from within the day', async () => {
       const logger = await fetchWithLogger(listingWith(silentSince(2)))

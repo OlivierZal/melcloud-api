@@ -10,7 +10,7 @@ import type {
   ClassicListDeviceDataAny,
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
-import { hasStoppedCommunicating } from './types.ts'
+import { readCommunicationSilence } from './types.ts'
 
 /**
  * One edge of a Classic unit's communication with MELCloud, as a sync
@@ -19,7 +19,8 @@ import { hasStoppedCommunicating } from './types.ts'
  * that JOINS the registry that way included, so a host that starts
  * over a silent unit says so — and `resumed` the first that reads it
  * fresh again. Both carry the stamp the listing gave, building-local
- * wall clock. A steady state either way is `null`, not a member.
+ * wall clock. A steady state either way is `null`, not a member, and
+ * so is a stamp that cannot be read: it moves nothing.
  * @category Entities
  */
 export interface ClassicCommunicationTransition {
@@ -98,8 +99,10 @@ export class ClassicDevice<
    */
   public trackCommunication(): ClassicCommunicationTransition | null {
     const { LastTimeStamp: lastTimestamp } = this.#data
-    const isStale = hasStoppedCommunicating(lastTimestamp)
-    if (isStale === this.#isStale) {
+    const isStale = readCommunicationSilence(lastTimestamp)
+    // A stamp that cannot be read is no news: the verdict of the last
+    // one that could be read stands, and no edge is answered.
+    if (isStale === null || isStale === this.#isStale) {
       return null
     }
     this.#isStale = isStale

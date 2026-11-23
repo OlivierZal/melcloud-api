@@ -30,6 +30,26 @@ export const hasOutlivedStaleWindow = (
   STALE_COMMUNICATION_HOURS
 
 /**
+ * What a Classic unit's listing stamp says of its silence, three ways:
+ * `true` past {@link STALE_COMMUNICATION_HOURS}, `false` within it, and
+ * `null` when the stamp cannot be read — which says nothing either way.
+ * The communication edge needs the third answer: read as "heard from",
+ * a garbled stamp would close the episode of a silent unit and open it
+ * again at the next listing.
+ * @param lastTimestamp - The listing's `LastTimeStamp`.
+ * @returns The verdict, or `null` for a stamp that cannot be read.
+ */
+export const readCommunicationSilence = (
+  lastTimestamp: string,
+): boolean | null => {
+  try {
+    return hasOutlivedStaleWindow(Temporal.PlainDateTime.from(lastTimestamp))
+  } catch {
+    return null
+  }
+}
+
+/**
  * Whether a Classic unit's last communication, as its listing stamps
  * it, is older than {@link STALE_COMMUNICATION_HOURS}: the ONE
  * predicate behind Classic's `isAvailable` and its `stale`
@@ -43,13 +63,8 @@ export const hasOutlivedStaleWindow = (
  * @param lastTimestamp - The listing's `LastTimeStamp`.
  * @returns `true` once the unit has been silent for over the window.
  */
-export const hasStoppedCommunicating = (lastTimestamp: string): boolean => {
-  try {
-    return hasOutlivedStaleWindow(Temporal.PlainDateTime.from(lastTimestamp))
-  } catch {
-    return false
-  }
-}
+export const hasStoppedCommunicating = (lastTimestamp: string): boolean =>
+  readCommunicationSilence(lastTimestamp) === true
 
 /**
  * Cross-dialect reachability contract: `true` while MELCloud can deliver writes

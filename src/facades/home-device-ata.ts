@@ -19,6 +19,7 @@ import {
   type TemperatureRange,
   ataTemperatureStep,
   rangeForHomeMode,
+  toAtaSetpoint,
 } from '../temperature-range.ts'
 import {
   type ClassicGroupState,
@@ -29,7 +30,7 @@ import {
   type Result,
   ok,
 } from '../types/index.ts'
-import { clampToRange, resolved, roundToStep } from '../utils.ts'
+import { resolved } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import {
   homeGroupMemberModes,
@@ -288,10 +289,11 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     if (value === undefined || value === null) {
       return {}
     }
-    const rounded = roundToStep(value, this.temperatureStep)
-    const range = this.getTemperatureRange(operationMode ?? this.operationMode)
     return {
-      setTemperature: range === null ? rounded : clampToRange(rounded, range),
+      setTemperature: toAtaSetpoint(
+        value,
+        this.getTemperatureRange(operationMode ?? this.operationMode),
+      ),
     }
   }
 

@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.3.1] - 2026-11-23
+
+### Changed
+
+- **The exact `@olivierzal/api-core` pin advances from 2.5.0 to 2.5.1.** The redaction refuses two more exemptions that would do nothing; this package's own builds as before.
+
+### Fixed
+
+- **An air-to-air setpoint is rounded to the half degree, whatever step the unit advertises.** 62.3.0 rounded to the unit's own step, so a unit that advertises whole degrees was sent `24` for `23.5`. An independent reading of that release reproduced what it does to a host that computes its own targets on half degrees, as the MELCloud extension for Homey does: it asks `23.5`, reads `24` back, takes it for a change made by hand and records it as the user's setting, which then climbs a degree at a time. No unit of that kind could be measured, and a host has no way to learn a unit's step through Homey today. Such a unit is sent half degrees again, as before 62.3.0; a half-degree unit is unchanged (`16.4` goes out as `16.5`). `temperatureStep` still reads the step the unit advertises.
+- **A group write on MELCloud Classic puts its setpoint on the half degree too.** `updateGroupState` on a building, a floor or an area sent the setpoint as given, where the same value addressed to one unit was rounded: the two halves of a house combined across both APIs could be sent different setpoints by one write. The registry models take the value that was sent.
+- **The line that dates a silent MELCloud Classic unit says only what the listing says.** It claimed "over 24 h" beside the stamp; the stamp is on the building's clock and is judged against UTC, so a building west of UTC read a day of silence after thirteen to twenty-three hours of it. The line now quotes the stamp and claims no duration. A stamp that cannot be read no longer closes the episode of a silent unit (`communicates again, last at null`, then the error line once more): it moves nothing. And a unit whose stamp is MELCloud's year-one marker is said to have never communicated, not dated to the year one. `readCommunicationSilence` is the three-way reading behind it.
+- **Five more keys are blanked in the request and response dumps.** The reading that 62.3.0's list came from also listed `Passcode` and `RandomKey`, which the wire names a secret by, and `Scene`, `SceneOwner` and `WeatherForecast`, of the kind 62.3.0 declared on their name alone. None was decided on. The first two join the credential keys, the three others the personal ones.
+
 ## [62.3.0] - 2026-11-23
 
 ### Added
@@ -1137,7 +1150,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.3.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.3.1...HEAD
+[62.3.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.3.0...v62.3.1
 [62.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.2.0...v62.3.0
 [62.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.1...v62.2.0
 [62.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.1.0...v62.1.1

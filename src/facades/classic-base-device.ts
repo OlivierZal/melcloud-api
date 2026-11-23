@@ -362,14 +362,16 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   /**
-   * Writes a change set to the device. The set is first reduced to
+   * Writes a change set to the device. Each value is first read as
+   * the unit will hold it (an air-to-air setpoint goes on the half
+   * degree and within its mode's bounds); the set is then reduced to
    * the fields that differ from the last synced state — a key that is
    * `undefined`, or unknown to the device type, counts as absent —
-   * then handed to the per-type rules, which clamp a field or add a
-   * companion one. Only the resulting fields are flagged for the unit
-   * to apply; the body carries the rest of the synced state around
-   * them, and no read precedes the write. The registry model then
-   * takes the fields the answer flags, and the sync notification
+   * and a per-type rule may add a companion field (the other zone of
+   * an air-to-water unit). Only the resulting fields are flagged for
+   * the unit to apply; the body carries the rest of the synced state
+   * around them, and no read precedes the write. The registry model
+   * then takes the fields the answer flags, and the sync notification
    * fires.
    * @param data - Fields to change.
    * @returns MELCloud's answer to the write.

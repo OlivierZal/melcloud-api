@@ -10,7 +10,10 @@ import { type Redaction, createRedaction } from '@olivierzal/api-core'
 // speaks. `owneremail` earns its place from the Classic list payload,
 // which carries the account's address on EVERY device of EVERY
 // successful sync — the one entry here that blanks a routine 200
-// rather than a failure.
+// rather than a failure. `Passcode` (a device read) and `RandomKey`
+// (the sign-in answer) are here on their NAME: both read `null` on the
+// accounts measured, and a key the wire calls a passcode or a key is
+// not left to print the day it is filled (62.3.1).
 const EXTRA_SENSITIVE_KEYS = [
   'access_token',
   'client_secret',
@@ -19,6 +22,8 @@ const EXTRA_SENSITIVE_KEYS = [
   'contextkey',
   'id_token',
   'owneremail',
+  'passcode',
+  'randomkey',
   'refresh_token',
   'x-mitscontextkey',
 ]
@@ -95,8 +100,12 @@ const EXTRA_SENSITIVE_KEYS = [
 // (a building's owner record, `ClassicBuildingOwner`, a record of
 // unknown shape; the same key is a number on a unit), and
 // `ListPendingInvite` and `ListOwnershipChangeRequest` (the sign-in
-// answer: other people's requests on the account). Blanking a key
-// that carries nothing costs nothing.
+// answer: other people's requests on the account), and, since 62.3.1,
+// three more the same reading listed and the first pass left
+// undecided: `Scene` and `SceneOwner` (a device read: a scene is
+// something its owner named) and `WeatherForecast`, which carries what
+// `WeatherObservations` does, in the same body. Blanking a key that
+// carries nothing costs nothing.
 // EXCLUDED, by decision:
 // - `SerialNumber`: a unique device identifier too, kept as a trade —
 //   it is not observable on the network, and it is the figure a report
@@ -141,6 +150,9 @@ const PERSONAL_DATA_KEYS = [
   'Owner',
   'OwnerName',
   'Postcode',
+  'Scene',
+  'SceneOwner',
+  'WeatherForecast',
   'WeatherObservations',
   'Zone1Name',
   'Zone2Name',

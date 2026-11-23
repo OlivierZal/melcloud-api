@@ -9,6 +9,7 @@ import {
   type TemperatureRange,
   ataTemperatureStep,
   rangeForHomeMode,
+  toAtaSetpoint,
 } from '../temperature-range.ts'
 import {
   type ClassicEnergyDataAta,
@@ -17,7 +18,7 @@ import {
   type Result,
   ok,
 } from '../types/index.ts'
-import { clampToRange, isValue, resolved, roundToStep } from '../utils.ts'
+import { isValue, resolved } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
@@ -176,12 +177,12 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
     }
   }
 
-  // The setpoint the unit will hold for the one asked: rounded to the
-  // unit's step, then held within the bounds of the current or
-  // requested operation mode. A Classic unit DROPS a setpoint off its
-  // step and keeps the previous one (measured 2026-11-23: 18.4 written
-  // on a half-degree unit, accepted with a 200 and listed until the
-  // unit next communicated, then answered as 18).
+  // The setpoint the unit will hold for the one asked: on the half
+  // degree, then within the bounds of the current or requested
+  // operation mode. A Classic unit DROPS a setpoint off its step and
+  // keeps the previous one (measured 2026-11-23: 18.4 written on a
+  // half-degree unit, accepted with a 200 and listed until the unit
+  // next communicated, then answered as 18).
   protected override readonly normalizeUpdateData: (
     data: Partial<ClassicUpdateDeviceDataAta>,
   ) => Partial<ClassicUpdateDeviceDataAta> = (data) => ({
@@ -196,10 +197,11 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
     if (value === undefined) {
       return {}
     }
-    const rounded = roundToStep(value, this.temperatureStep)
-    const range = this.getTemperatureRange(operationMode)
     return {
-      SetTemperature: range === null ? rounded : clampToRange(rounded, range),
+      SetTemperature: toAtaSetpoint(
+        value,
+        this.getTemperatureRange(operationMode),
+      ),
     }
   }
 }
