@@ -17,6 +17,7 @@ import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type AtaTemperatureBounds,
   type TemperatureRange,
+  ataTemperatureStep,
   rangeForHomeMode,
 } from '../temperature-range.ts'
 import {
@@ -28,7 +29,7 @@ import {
   type Result,
   ok,
 } from '../types/index.ts'
-import { clampToRange, resolved } from '../utils.ts'
+import { clampToRange, resolved, roundToStep } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import {
   homeGroupMemberModes,
@@ -44,10 +45,6 @@ import {
   getHomeAtaEnergySeries,
 } from './home-energy.ts'
 import { resolveHomeReportWindow } from './home-report.ts'
-
-// Half-degree units advertise it; the rest step by a whole degree.
-const HALF_DEGREE_STEP = 0.5
-const WHOLE_DEGREE_STEP = 1
 
 // The dialect extractor: Home spells the three advertised pairs in
 // camelCase, and the shared module resolves modes onto them.
@@ -124,9 +121,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns `0.5` on half-degree units, `1` otherwise.
    */
   public get temperatureStep(): number {
-    return this.capabilities.hasHalfDegreeIncrements
-      ? HALF_DEGREE_STEP
-      : WHOLE_DEGREE_STEP
+    return ataTemperatureStep(this.capabilities.hasHalfDegreeIncrements)
   }
 
   /**
@@ -293,9 +288,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     if (value === undefined || value === null) {
       return {}
     }
+    const rounded = roundToStep(value, this.temperatureStep)
     const range = this.getTemperatureRange(operationMode ?? this.operationMode)
     return {
-      setTemperature: range === null ? value : clampToRange(value, range),
+      setTemperature: range === null ? rounded : clampToRange(rounded, range),
     }
   }
 

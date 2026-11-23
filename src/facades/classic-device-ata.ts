@@ -7,6 +7,7 @@ import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type AtaTemperatureBounds,
   type TemperatureRange,
+  ataTemperatureStep,
   rangeForHomeMode,
 } from '../temperature-range.ts'
 import {
@@ -16,7 +17,7 @@ import {
   type Result,
   ok,
 } from '../types/index.ts'
-import { clampToRange, isValue, resolved } from '../utils.ts'
+import { clampToRange, isValue, resolved, roundToStep } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
@@ -64,6 +65,18 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   public readonly flags: typeof classicAtaFlags = classicAtaFlags
 
   public readonly type: typeof ClassicDeviceType.Ata = ClassicDeviceType.Ata
+
+  /**
+   * Setpoint granularity in °C, from the unit's advertised
+   * half-degree capability. A listing that does not say reads as half
+   * degrees: what every unit measured answers, and the one reading
+   * that can only send a unit what it was already sent.
+   * @returns `1` on a unit that says it holds whole degrees only,
+   * `0.5` otherwise.
+   */
+  public get temperatureStep(): number {
+    return ataTemperatureStep(this.data.HasHalfDegreeIncrements ?? true)
+  }
 
   protected override readonly extractEnergyReport: (
     data: ClassicEnergyDataAta,
@@ -163,25 +176,30 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
     }
   }
 
-  // Clamp SetTemperature to the valid range for the current or requested
-  // operation mode before sending to the Classic API
-  protected override readonly deriveUpdateData: (
+  // The setpoint the unit will hold for the one asked: rounded to the
+  // unit's step, then held within the bounds of the current or
+  // requested operation mode. A Classic unit DROPS a setpoint off its
+  // step and keeps the previous one (measured 2026-11-23: 18.4 written
+  // on a half-degree unit, accepted with a 200 and listed until the
+  // unit next communicated, then answered as 18).
+  protected override readonly normalizeUpdateData: (
     data: Partial<ClassicUpdateDeviceDataAta>,
   ) => Partial<ClassicUpdateDeviceDataAta> = (data) => ({
     ...data,
-    ...this.#clampTargetTemperature(data),
+    ...this.#toHeldSetpoint(data),
   })
 
-  #clampTargetTemperature(data: Partial<ClassicUpdateDeviceDataAta>): {
+  #toHeldSetpoint(data: Partial<ClassicUpdateDeviceDataAta>): {
     SetTemperature?: number
   } {
     const { OperationMode: operationMode, SetTemperature: value } = data
     if (value === undefined) {
       return {}
     }
+    const rounded = roundToStep(value, this.temperatureStep)
     const range = this.getTemperatureRange(operationMode)
     return {
-      SetTemperature: range === null ? value : clampToRange(value, range),
+      SetTemperature: range === null ? rounded : clampToRange(rounded, range),
     }
   }
 }

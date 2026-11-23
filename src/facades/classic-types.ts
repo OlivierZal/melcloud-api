@@ -66,6 +66,13 @@ export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
   typeof ClassicDeviceType.Ata
 > {
   /**
+   * Setpoint granularity in °C, from the unit's advertised half-degree
+   * capability: `1` on a unit that says it holds whole degrees only,
+   * `0.5` otherwise. A setpoint write is rounded to it before it is
+   * sent.
+   */
+  readonly temperatureStep: number
+  /**
    * Read this device's current state projected as a group state.
    */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>

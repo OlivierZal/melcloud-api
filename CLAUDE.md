@@ -962,10 +962,53 @@ reasons are this file's, the workflow is CONTRIBUTING.md's.
   `temperatureStep` (ATA from `hasHalfDegreeIncrements`, ATW from the
   FTC's own `temperatureIncrement` declaration — the direct field wins
   over a re-derivation from `hasHalfDegrees` whenever the wire states
-  the step itself). What stays deliberately unexposed is Classic
+  the step itself), and since 62.3.0 so does the Classic ATA facade,
+  from the listing's `HasHalfDegreeIncrements` (one reader for both,
+  `ataTemperatureStep` in `temperature-range.ts`). What stays
+  deliberately unexposed is Classic
   `CanSetTemperatureIncrementOverride`: a device PERMISSION, never a
   step declaration — reading it as a step would be wrong, and its
   absence from the public surface remains a verdict, not a gap.
+- An ATA setpoint is ROUNDED to that step before it is clamped, on
+  both dialects (62.3.0), because a unit holds a setpoint on its step
+  and nothing else. Measured by writes on one half-degree unit of each
+  dialect on 2026-11-23 (the owner's go, each unit restored). Classic
+  DROPS an off-step value: `18.4` answered `200`, echoed and listed as
+  `18.4` until the unit next communicated (8 min 18 s later, the unit
+  reporting every ten minutes that evening), then the listing read
+  `18`, the setpoint held before; `18.5` written next was held. The
+  field report behind it (com.melcloud, the same day): an automation
+  lowering a target by 0.4 °C every half hour, re-sent every four
+  minutes, of which only the whole degrees landed — `16.4` read back as
+  `18`, `15.6` and `15.2` as `16`, six read-back lines in 86 minutes —
+  read by its owner as "reverts to an old setting". Home ROUNDS it
+  itself, late: `20.6` read `20.5` a minute later, `20.8` read `21`,
+  `20.25` read `20` (a tie ended on the whole degree), and `20.75`
+  still read `20.75` after two and a half minutes on a unit holding
+  `21`: what the wire answers is the last write until the unit reports
+  a CHANGE, so a value that rounds to the setpoint already held stays
+  on display as written. `roundToStep` (`utils.ts`) is nearest, a tie
+  going UP: one rule for both dialects and for a whole-degree unit,
+  where a tile's half steps make the tie the common case; on Home it
+  moves the `x.25` tie half a degree up from where the unit alone put
+  it, by decision. NOT measured: a whole-degree unit (none at hand; the
+  step is read off the capability the official apps honour) and the
+  ATW zone setpoints, which keep their clamp alone. A Classic listing
+  that does not carry `HasHalfDegreeIncrements` reads as HALF degrees
+  (the type says optional for that reason: nothing validates a unit's
+  listed payload): the eight units read all answer `true`, and read the
+  other way a missing flag would take half degrees away from a unit
+  that holds them, where this reading sends a unit nothing it was not
+  already sent.
+  On Classic the rounding and the clamp are the facade's
+  `normalizeUpdateData`, applied to what the caller ASKED, before the
+  no-change filter: a request the step or the bounds bring back to the
+  setpoint the unit holds is refused with `NoChangesError` and nothing
+  leaves, where the clamp, sitting in `deriveUpdateData` after the
+  filter, used to re-send the held value. `deriveUpdateData` is the
+  ATW's alone now (the companion zone, derived from what CHANGED,
+  flagged before the body is assembled). Pinned on both dialects by
+  `tests/contracts/ata-setpoint-clamp.test.ts`.
 - `resumeSession()` judges by the SIGN-IN ROUND-TRIP, never by the
   session — because two different failures both leave a live session
   standing, and only the round-trip separates them. An ACCEPTED

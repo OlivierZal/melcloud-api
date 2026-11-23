@@ -102,6 +102,12 @@ export interface ClassicListDeviceDataAta
   readonly MinTempCoolDry: number
   readonly MinTempHeat: number
   readonly OutdoorTemperature: number
+  /**
+   * Whether the unit holds setpoints on half degrees. Optional: nothing
+   * validates a unit's listed payload, and a listing that did not say
+   * must not be read as a whole-degree unit.
+   */
+  readonly HasHalfDegreeIncrements?: boolean
 }
 
 /**
