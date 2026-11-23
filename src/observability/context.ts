@@ -33,8 +33,8 @@ const EXTRA_SENSITIVE_KEYS = [
 // snapshot — and matches keys case-insensitively (one lower-cased
 // set), so each key is spelled once, the way its wire spells it. The
 // parsed payloads are untouched: redaction is a reporting concern.
-// DECLARED (2026-10-10), the user-entered strings this SDK's own types
-// evidence:
+// DECLARED, the user-entered strings this SDK's own types evidence
+// (2026-10-10):
 // - Home `/context`: `givenDisplayName` (the unit's display name,
 //   `HomeDeviceCommonData`) and `firstname`/`lastname` (the account
 //   holder, on the identity slice of every `/context` round-trip).
@@ -61,28 +61,68 @@ const EXTRA_SENSITIVE_KEYS = [
 //   account's data and, like the MAC, serves no diagnosis: the app and
 //   every SDK-authored line name a unit by `DeviceID`/`id`. Data
 //   minimisation decides, not a ruling.
-// EXCLUDED, by decision:
-// - The bare `name` key. On Home it carries the building name
-//   (`HomeBuilding.name`) — but ALSO every device setting's name
+// DECLARED, what real payloads still printed (2026-11-23: a diagnostic
+// report carried an account holder's full name, and every exchange of
+// one account was then read through this engine, key paths only):
+// - The bare `name` key: the account holder (Classic
+//   `LoginData.Name`, printed whole at every sign-in), a building
+//   (Classic `Name` at the root of the listing, Home `buildings[].name`
+//   and `guestBuildings[].name`), a floor and an area (Classic
+//   `Floors[].Name`, `Areas[].Name`). One seat spells something else
+//   with the same word, a device setting's name
 //   (`HomeDeviceSetting.name`: `Power`, `OperationModeZone1`…, the key
-//   `setting()` in `home-base-device.ts` reads), and a key is blanked
-//   wherever it rides, so declaring it would hide the setting names
-//   from the very dump a diagnosis needs. Home building names and the
-//   Classic building/floor/area `Name` entries therefore STAY in the
-//   dump: a known trade.
-// - `SerialNumber`: a unique device identifier too, kept as a trade,
-//   like `name` above — it is not observable on the network, and it is
-//   the figure a report and the owner name the unit by (the serial the
-//   owner quotes to the manufacturer). Blanking it is one line here if
-//   the trade changes.
+//   `setting()` in `home-base-device.ts` reads), and that is the one
+//   seat taken back below (`NOT_PERSONAL_UNDER`): a dump with its
+//   setting names blanked diagnoses nothing. Any other `name` a wire
+//   grows is blanked until someone argues for it.
+// - `MapLatitude`, `MapLongitude`: the position of the account's map,
+//   in the same sign-in answer.
+// - `WeatherObservations`: the weather at the building, which a group
+//   read (`/Group/Get`) and a device read (`/Device/Get`) carry. Its
+//   `Sunrise` and `Sunset`, to the second, place the house about as
+//   well as the coordinates blanked above, and nothing here reads it.
+// - `connectedInterfaceIdentifier`: how MELCloud Home addresses a
+//   unit's adapter. Four of the five read were twelve hexadecimal
+//   digits, the form of a MAC address (a first-generation adapter is
+//   MAC-addressed, `HomeAtaDeviceData`); that it IS the adapter's MAC
+//   is not established (none equalled a Classic `MacAddress` on that
+//   account, whose units are not the same ones). It goes by the rule
+//   of the network identifiers above: a hardware identifier that
+//   serves no diagnosis.
+// DECLARED ON THE KEY'S NAME, each read `null` or empty on the accounts
+// measured, so what they carry when set is not known: `CustomerName`,
+// `BuildingAddress` and `BuildingCity` (the energy report), `Owner`
+// (a building's owner record, `ClassicBuildingOwner`, a record of
+// unknown shape; the same key is a number on a unit), and
+// `ListPendingInvite` and `ListOwnershipChangeRequest` (the sign-in
+// answer: other people's requests on the account). Blanking a key
+// that carries nothing costs nothing.
+// EXCLUDED, by decision:
+// - `SerialNumber`: a unique device identifier too, kept as a trade —
+//   it is not observable on the network, and it is the figure a report
+//   and the owner name the unit by (the serial the owner quotes to the
+//   manufacturer). Blanking it is one line here if the trade changes.
+// - A Classic building's `Location`: a number that maps one to one to
+//   the building's city on the account measured (five buildings, three
+//   cities, four to six digits), so a place at city grain. The engine
+//   matches a key wherever it rides, headers included, and `Location`
+//   is the HTTP header a sign-in diagnosis reads: declaring it would
+//   blank every redirect target for a key into somebody else's table.
+// - The account and unit ids (`UserId`, `id`, `DeviceID`, `BuildingID`)
+//   and the country (`Country`, `CountryName`): what a report names a
+//   thing by, and too coarse to place anyone.
 // - `OwnerEmail` and `email`: already the credential tier's (above,
 //   and the core's base vocabulary).
 const PERSONAL_DATA_KEYS = [
   'AddressLine1',
   'AddressLine2',
   'AreaName',
+  'BuildingAddress',
+  'BuildingCity',
   'BuildingName',
   'City',
+  'connectedInterfaceIdentifier',
+  'CustomerName',
   'DeviceName',
   'District',
   'firstname',
@@ -90,14 +130,25 @@ const PERSONAL_DATA_KEYS = [
   'givenDisplayName',
   'lastname',
   'Latitude',
+  'ListOwnershipChangeRequest',
+  'ListPendingInvite',
   'LocalIPAddress',
   'Longitude',
   'MacAddress',
+  'MapLatitude',
+  'MapLongitude',
+  'name',
+  'Owner',
   'OwnerName',
   'Postcode',
+  'WeatherObservations',
   'Zone1Name',
   'Zone2Name',
 ]
+
+// The one seat where a personal-data key names something else
+// (api-core 2.5.0): under `settings`, `name` is a device setting's.
+const NOT_PERSONAL_UNDER = { settings: ['name'] }
 
 /**
  * The redaction engine bound to the MELCloud vocabulary — the ONE
@@ -108,5 +159,6 @@ const PERSONAL_DATA_KEYS = [
  * nothing in this SDK wraps them.
  */
 export const redaction: Redaction = createRedaction(EXTRA_SENSITIVE_KEYS, {
+  notPersonalUnder: NOT_PERSONAL_UNDER,
   personalDataKeys: PERSONAL_DATA_KEYS,
 })
